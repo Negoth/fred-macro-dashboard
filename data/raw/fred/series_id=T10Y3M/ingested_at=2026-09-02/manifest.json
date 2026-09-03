@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "T10Y3M",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "T10Y3M",
+    "file_type": "json",
+    "observation_start": "2024-09-02"
+  },
+  "retrieved_at": "2026-09-02T00:40:24.026675+00:00",
+  "sha256": "550887b0b4c9ce1287144dded01408cc8e9ac46b665f8c3945a47dfca07fc191",
+  "n_observations": 522,
+  "observation_start": "1982-01-04",
+  "observation_end": "2026-09-01",
+  "last_updated": "2026-09-01 16:03:41-05",
+  "title": "10-Year Treasury Constant Maturity Minus 3-Month Treasury Constant Maturity",
+  "units": "Percent",
+  "frequency_short": "D",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

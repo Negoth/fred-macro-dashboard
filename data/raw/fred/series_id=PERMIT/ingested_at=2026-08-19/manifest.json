@@ -1,0 +1,20 @@
+{
+  "source": "FRED",
+  "series_id": "PERMIT",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "PERMIT",
+    "file_type": "json"
+  },
+  "retrieved_at": "2026-08-19T08:03:23.534772+00:00",
+  "sha256": "7adacbc9b5fbe070765eab5b0c8c6634f96b948b7515cf8d1710b9d8a01f40a0",
+  "n_observations": 799,
+  "observation_start": "1960-01-01",
+  "observation_end": "2026-07-01",
+  "last_updated": "2026-08-18 07:33:18-05",
+  "title": "New Privately-Owned Housing Units Authorized in Permit-Issuing Places: Total Units",
+  "units": "Thousands of Units",
+  "frequency_short": "M",
+  "seasonal_adjustment_short": "SAAR",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

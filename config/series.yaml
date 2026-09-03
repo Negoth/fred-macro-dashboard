@@ -1,0 +1,498 @@
+# Target series definitions
+#
+# Source of truth: docs/fred-tableau-architecture.md, chapter 6 "The dashboard's question".
+# This file is the implementation of that chapter; ingest / staging / marts take it as their
+# single input.
+#
+# ── There are two kinds of pillar. Confusing them re-creates the 6.2-C failure ──────────
+#
+#   coordinate: growth / inflation
+#     Carries no good/bad sign. The value itself is a position on an axis of the quadrant map.
+#     `sign` is used only to line the axis directions up
+#     (e.g. a rise in jobless claims means slowing growth, hence -1)
+#
+#   score: financial / credit / dollar
+#     `sign` means "tailwind (+1) / headwind (-1) for risk assets"
+#
+# WARNING: always run the liveness-check script in 6.8 before implementing.
+#    FRED discontinues and replaces series (TWEXBGSMTH was suspected; the ISM series were removed).
+#    Series marked `verify: true` need particular attention.
+
+meta:
+  scope: "US + JPY"           # 6.1 / no international comparison
+  # Decided from the measurements taken on 2026-08-18 (see `verification` at the end of this file).
+  # 1990 turned out to be unattainable. The binding constraint is the TIPS/BEI series in pillar 2
+  # (T10YIE, T5YIFR and DFII10 all start in 2003-01).
+  # The dollar series in pillar 5 start in 2006-01, so pillar 5 alone begins three years later.
+  # The NBER recessions covered are the two of 2007-12..2009-06 and 2020-02..2020-04.
+  history_start: "2003-01-01"
+  history_start_overrides:
+    dollar: "2006-01-01"
+  strategy: A                 # 3.2 trailing window
+  lookback_months: 24
+
+  z:
+    window: expanding         # 6.5 / avoids look-ahead bias. Neither a fixed nor a rolling window
+    # Do not emit a score until the statistics are stable. Specified in *months*, not in
+    # observations. Written as observations, the meaning would change with frequency
+    # (60 daily observations is about 3 months, 60 monthly observations is 5 years).
+    # The implementation converts this to an observation count based on the frequency.
+    min_months: 60
+    clip: 3.0
+
+  momentum:
+    horizons_months: [3, 6]   # windows used to compute z_momentum
+
+pillars:
+  growth:
+    kind: coordinate
+    axis: x
+    label: Growth
+  inflation:
+    kind: coordinate
+    axis: y
+    label: Inflation
+  financial:
+    kind: score
+    label: Financial conditions & liquidity
+  credit:
+    kind: score
+    label: Credit & risk appetite
+  dollar:
+    kind: score
+    label: Dollar & external
+
+# Vocabulary for `transform`
+#   level     z-score the level as-is
+#   yoy       year-over-year change
+#   yoy_4wma  year-over-year change of a 4-week moving average (damps weekly noise)
+#   mom3_ann  3-month change, annualised (catches turning points faster than YoY)
+#   diff12    12-month difference (for things like the policy rate, where the change matters, not the level)
+#   chg6m     6-month change (direction rather than level; the rate axis of the four seasons)
+#   chg13w    13-week change
+
+series:
+  # ── Pillar 1: Growth (coordinate axis X) ───────────────────────────────────────
+  - id: PAYEMS
+    title_display: Nonfarm payroll employment
+    pillar: growth
+    freq: M
+    ingest: monthly
+    transform: mom3_ann
+    sign: +1
+    rationale: Employment is the core coincident indicator. With YoY, turning points are detected six months late
+
+  - id: ICSA
+    title_display: Initial jobless claims
+    pillar: growth
+    freq: W
+    ingest: weekly
+    transform: yoy_4wma
+    sign: -1
+    rationale: One of the few real-activity indicators available weekly. A rise means slowing growth, so the axis direction is inverted
+
+  - id: INDPRO
+    title_display: Industrial production index
+    pillar: growth
+    freq: M
+    ingest: monthly
+    transform: yoy
+    sign: +1
+    rationale: Representative of the manufacturing cycle. Its cyclical amplitude is large, so the z-score is informative
+
+  - id: PERMIT
+    title_display: Housing building permits
+    pillar: growth
+    freq: M
+    ingest: monthly
+    transform: yoy
+    sign: +1
+    rationale: Highly rate-sensitive and strongly leading. Lets you read the lag against the financial-conditions pillar
+
+  - id: UMCSENT
+    title_display: University of Michigan consumer sentiment index
+    pillar: growth
+    freq: M
+    ingest: monthly
+    transform: level
+    sign: +1
+    rationale: Soft data. It leads the hard data but can also diverge from it, so we keep both
+
+  - id: AWHMAN
+    title_display: Average weekly hours, manufacturing (production & nonsupervisory)
+    pillar: growth
+    freq: M
+    ingest: monthly
+    transform: level
+    sign: +1
+    rationale: |
+      Overtime hours move before headcount does, so this leads PAYEMS. A classic LEI component.
+      USSLIND was originally used as the leading component, but it stopped updating in 2020-02, so it was replaced.
+
+  - id: NEWORDER
+    title_display: Core capital goods orders (nondefense, excluding aircraft)
+    pillar: growth
+    freq: M
+    ingest: monthly
+    transform: yoy
+    sign: +1
+    rationale: A leading indicator of capital expenditure. A demand signal on a different track from AWHMAN's labour input
+
+  # ── Pillar 2: Inflation (coordinate axis Y) ────────────────────────────────────
+  - id: CPILFESL
+    title_display: Core CPI (excluding food & energy)
+    pillar: inflation
+    freq: M
+    ingest: monthly
+    transform: mom3_ann
+    sign: +1
+    rationale: YoY lags at turning points because of base effects. The 3-month annualised rate is better suited to identifying the regime
+
+  - id: PCEPILFE
+    title_display: Core PCE price index
+    pillar: inflation
+    freq: M
+    ingest: monthly
+    transform: yoy
+    sign: +1
+    rationale: The Fed's policy target itself. Needed to read the policy reaction function
+
+  - id: T10YIE
+    title_display: Expected inflation (10-year breakeven)
+    pillar: inflation
+    freq: D
+    ingest: daily
+    transform: level
+    sign: +1
+    rationale: The inflation the market is pricing in. The "fast layer" that leads the real-activity indicators
+
+  - id: T5YIFR
+    title_display: 5-year, 5-year forward expected inflation rate
+    pillar: inflation
+    freq: D
+    ingest: daily
+    transform: level
+    sign: +1
+    rationale: The level of the anchor, stripped of short-term fluctuation. Its divergence from T10YIE is informative
+
+  - id: DCOILWTICO
+    title_display: WTI crude oil price
+    pillar: inflation
+    freq: D
+    ingest: daily
+    transform: yoy
+    sign: +1
+    rationale: The main driver of headline inflation. Watch its divergence from core
+
+  - id: AHETPI
+    title_display: Average hourly earnings (production & nonsupervisory)
+    pillar: inflation
+    freq: M
+    ingest: monthly
+    transform: yoy
+    sign: +1
+    rationale: The wage side, which determines how sticky inflation is. A leading indicator of services inflation
+
+  # ── Pillar 3: Financial conditions & liquidity (score) ─────────────────────────
+  - id: NFCI
+    title_display: Chicago Fed National Financial Conditions Index
+    pillar: financial
+    freq: W
+    ingest: weekly
+    transform: level
+    sign: -1
+    rationale: An off-the-shelf composite bundling over 100 indicators. Also used to sanity-check our own scores
+
+  - id: T10Y3M
+    title_display: Yield curve (10-year minus 3-month)
+    pillar: financial
+    freq: D
+    ingest: daily
+    transform: level
+    sign: +1
+    season_role: leading_signal
+    rationale: Held to predict recessions better than 10Y-2Y. Negative when the curve is inverted
+
+  - id: T10YFF
+    title_display: 10-year yield minus the fed funds rate
+    pillar: financial
+    freq: D
+    ingest: daily
+    transform: level
+    sign: +1
+    origin: initial   # inherited from the initial 5-series proposal
+    season_role: leading_signal
+    rationale: |
+      Chapter 3 of the book: "the yield spread is a leading indicator of the economy". Treated not as an axis of
+      the four seasons but as advance notice of a change of season.
+      The position of long rates relative to the policy rate = how tight monetary policy is in relative terms
+
+  - id: DGS10
+    title_display: 10-year Treasury yield (long-term rate)
+    pillar: financial
+    freq: D
+    ingest: daily
+    transform: chg6m
+    sign: -1
+    origin: initial
+    season_axis: rate
+    rationale: |
+      The second of the book's "three interest rates". It was originally excluded on the grounds that it enters
+      three times as a component of T10YFF / T10Y3M / DFII10 and would therefore be triple-counted, but that was
+      only true of the *level*.
+      The "direction of rates" axis of the four seasons can only be built from the change in long rates (both
+      T10YFF and T10Y3M are levels of a spread, so the axis does not move when short and long rates rise together).
+      Since we take only the change and not the level, no triple-counting occurs.
+
+  - id: DFII10
+    title_display: 10-year real rate (TIPS yield)
+    pillar: financial
+    freq: D
+    ingest: daily
+    transform: level
+    sign: -1
+    rationale: It is the real rate, not the nominal rate, that discounts asset prices. A rise is a headwind for valuations
+
+  - id: FEDFUNDS
+    title_display: Fed funds rate (effective)
+    pillar: financial
+    freq: M
+    ingest: monthly
+    transform: diff12
+    sign: -1
+    origin: initial
+    season_axis: rate
+    rationale: Held as a change rather than a level. As per 6.2-B, 0.25->0.50 and 5.00->5.25 are not the same thing
+
+  # ── Pillar 4: Credit & risk appetite (score) ───────────────────────────────────
+  - id: BAA10Y
+    title_display: Baa corporate bond minus 10-year Treasury spread
+    pillar: credit
+    freq: D
+    ingest: daily
+    transform: level
+    sign: -1
+    origin: initial
+    season_axis: credit
+    rationale: |
+      The third of the book's "three interest rates" (the corporate bond yield), and the corporate spread of
+      chapter 4 itself. Credit stress on the investment-grade side. The only one of the initial five series whose
+      sign is determined on its own
+
+  - id: VIXCLS
+    title_display: VIX index
+    pillar: credit
+    freq: D
+    ingest: daily
+    transform: level
+    sign: -1
+    rationale: The uncertainty priced in by the equity market. Divergence from credit spreads is a sign of stress
+
+  - id: DRTSCILM
+    title_display: Bank lending standards (SLOOS, large & medium firms)
+    pillar: credit
+    freq: Q
+    ingest: monthly
+    transform: level
+    sign: -1
+    season_axis: credit
+    rationale: |
+      Quarterly, but strongly leading. Market credit and bank credit are different things, so we hold both.
+      This is the very axis the book's four seasons use to separate the seasons, as "bank lending standards"
+
+  # ── Pillar 5: Dollar & external (score) ────────────────────────────────────────
+  - id: DTWEXBGS
+    title_display: Trade-weighted dollar index (broad, goods & services)
+    pillar: dollar
+    freq: D
+    ingest: daily
+    transform: yoy
+    sign: -1
+    rationale: |
+      A stronger dollar raises the real burden of dollar-denominated debt worldwide and thus acts as global tightening.
+      TWEXBGSMTH from the initial proposal has not been discontinued (it is still updating as of 2026-07); it is the
+      monthly version of this same index. Both also start in 2006-01. The only reason for taking the daily version is
+      that it matches the grain of the other market series.
+      Note that chapter 5 of the book deals not with the dollar index but with the World Dollar (WORLD_DOLLAR):
+      this one is "the price of the dollar", that one is "the quantity of dollars" — a different dimension. We hold both.
+
+  - id: DEXJPUS
+    title_display: USD/JPY exchange rate
+    pillar: dollar
+    freq: D
+    ingest: daily
+    transform: yoy
+    sign: +1
+    rationale: |
+      The perspective of an investor whose living expenses are in yen. A weaker yen raises the yen-converted return on
+      foreign-currency assets, hence +1.
+      Note that this sign depends on the investor's currency, and would mean something different for a US-based
+      investor (this is stated explicitly in the README).
+
+# Derived series: computed in the intermediate layer from several raw series
+derived:
+  - id: WORLD_DOLLAR
+    title_display: World Dollar (US dollar liquidity)
+    pillar: dollar
+    freq: W
+    ingest: weekly
+    inputs: [BOGMBASE, WMTSECL1]
+    formula: "BOGMBASE + WMTSECL1"
+    transform: yoy
+    sign: +1
+    rationale: |
+      The US dollar liquidity measure covered by chapter 5 of the book, "Money goes around the world".
+      It is the monetary base the Fed supplies domestically plus the Treasuries held as foreign-exchange reserves by
+      non-US central banks and others (the Fed custody holdings). It measures the total quantity of dollars circulating
+      in the world.
+      The initial proposal used TWEXBGSMTH (the dollar index) as a proxy, but the dollar index is "the price of the
+      dollar" and is a different thing from WD, "the quantity of dollars", so it was rebuilt on the original definition.
+      BOGMBASE is monthly and WMTSECL1 is weekly, so it is forward-filled onto the weekly grid.
+      The old WMTSECL was discontinued in 2012-11; we use its successor WMTSECL1.
+
+  - id: NET_LIQUIDITY
+    title_display: Fed net liquidity
+    pillar: financial
+    freq: W
+    ingest: weekly
+    inputs: [WALCL, RRPONTSYD, WTREGEN]
+    formula: "WALCL - RRPONTSYD - WTREGEN"
+    transform: chg13w
+    sign: +1
+    rationale: |
+      From the Fed's balance sheet, subtract the part absorbed by reverse repos and the Treasury General Account that
+      therefore does not circulate in the market.
+      During QT the liquidity the market feels lags the shrinkage of total assets, so this difference carries meaning.
+      All three series are weekly and share a publication date, so they can be combined.
+
+# ── The financial four seasons (the main quadrant map on the front page) ────────
+# Source: Horii, "Kinri o Mireba Toshi wa Umaku Iku" (revised edition), Cross Media Publishing
+#   Ch. 2 The economy can be forecast from three interest rates / Ch. 3 The business cycle and interest rates
+#   Ch. 4 The credit cycle / Ch. 9 To succeed at investing: "measuring the investment climate by interest rates"
+#
+# WARNING: only the axis construction is settled. The rules for the quadrant boundaries are pending
+# confirmation against chapter 9 of the original book (not implemented).
+seasons:
+  status: axes_fixed_thresholds_provisional
+  source: "Horii, 'Kinri o Mireba Toshi wa Umaku Iku' (revised edition), ch. 9"
+
+  # WARNING: provisional values. Because the decision rules of the original ch. 9, "measuring the investment
+  #    climate by interest rates", are not available in any published material, these are placeholders based on
+  #    the sign of the z-score. Once the original can be checked, only this block needs replacing
+  #    (the SQL can be left alone). The README states explicitly that this is an independent implementation
+  #    inspired by the book's four seasons.
+  thresholds:
+    # If the distance from the origin is below this, treat the point as "boundary" and do not assign a quadrant.
+    # Judging per axis (OR) would make a point a boundary merely because one axis is near zero and would leave
+    # half the whole history unclassified, so we use distance instead
+    deadzone: 0.25
+    # Number of months in the trailing moving average applied to the axes. Damps month-to-month reversal noise.
+    # It is not centred, in order to avoid look-ahead bias (same reason as 6.5)
+    smoothing_months: 3
+
+  axes:
+    rate:
+      label: Direction of rates
+      series: [DGS10, FEDFUNDS]
+      note: |
+        Uses the change, not the spread. Both T10YFF and T10Y3M are "levels of a spread",
+        so the axis does not respond when short and long rates move together.
+    credit:
+      label: Credit cycle
+      series: [BAA10Y, DRTSCILM]
+      note: Chapter 4. Widening corporate spreads and tightening lending standards both point toward "tightening"
+
+  # Chapter 3. Not an axis; overlaid on the quadrant map as a marker giving advance notice of a change of season
+  leading_signal:
+    label: Yield spread (leading indicator)
+    series: [T10YFF, T10Y3M]
+    note: Marks on the trajectory the points at which the curve inverted
+
+  quadrants:
+    spring: { label: Spring, rate: down, credit: easy,  book: "Rates falling, banks lending freely, equities rising" }
+    summer: { label: Summer, rate: up,   credit: easy,  book: "Falling rates bottom out and turn up, lending starts to tighten, equities peak" }
+    autumn: { label: Autumn, rate: up,   credit: tight, book: "Rates rising, banks reluctant to lend, equities falling" }
+    winter:
+      label: Winter
+      rate: down
+      credit: tight
+      book: |
+        Rates stay high, lending gradually increases, equities rise little by little.
+        Because "staying high" means a direction near zero, this is the most ambiguous boundary of the four quadrants.
+        This one in particular needs to be checked against the original book.
+
+# Used as context for the analysis, but not counted in the scores
+context:
+  - id: USREC
+    title_display: NBER recession flag
+    freq: M
+    ingest: monthly
+    usage: Shading on the historical charts (the is_recession of 3.6)
+
+  - id: BAMLH0A0HYM2
+    title_display: US high-yield bond OAS
+    freq: D
+    ingest: daily
+    usage: |
+      Shown only in the change table and the tooltips; not counted in the pillar scores.
+      It is single-handedly the most informative measure of current credit stress, but licensing restrictions mean
+      the ICE BofA series on FRED only go back about three years (from 2023-08-21) and cover neither 2008 nor 2020.
+      Taking a z-score over that history would be meaningless, so it was excluded in favour of consistency in the
+      time-series scores.
+      BAMLC0A0CM (IG OAS) is under the same restriction. The long-history credit signal is carried by BAA10Y (from 1986).
+
+  - id: SAHMREALTIME
+    title_display: Sahm rule recession indicator
+    freq: M
+    ingest: monthly
+    usage: An external benchmark for sanity-checking the regime labels. Not included in the scores
+
+# ── Results of the existence check ────────────────────────────────────────────
+# Carried out 2026-08-18. https://fred.stlouisfed.org/graph/fredgraph.csv?id=<ID> (no API key needed)
+# All 28 exist. Below are the measured ranges. Series that bind how far back the panel can go are marked with a star.
+verification:
+  checked_at: "2026-08-18"
+  method: "Fetched the full history via fredgraph.csv (no API key needed) and measured the first and last observation dates"
+  ranges:
+    AHETPI:       ["1964-01-01", "2026-07-01"]
+    AWHMAN:       ["1939-01-01", "2026-07-01"]
+    BAA10Y:       ["1986-01-02", "2026-08-14"]
+    CPILFESL:     ["1957-01-01", "2026-07-01"]
+    DCOILWTICO:   ["1986-01-02", "2026-08-11"]
+    DEXJPUS:      ["1971-01-04", "2026-08-14"]
+    BOGMBASE:     ["1959-01-01", "2026-06-01"]
+    DFII10:       ["2003-01-02", "2026-08-14"]   # * binds pillars 2/3
+    DGS10:        ["1962-01-02", "2026-08-14"]
+    DRTSCILM:     ["1990-04-01", "2026-07-01"]
+    DTWEXBGS:     ["2006-01-02", "2026-08-14"]   # * binds pillar 5
+    FEDFUNDS:     ["1954-07-01", "2026-07-01"]
+    ICSA:         ["1967-01-07", "2026-08-08"]
+    INDPRO:       ["1919-01-01", "2026-07-01"]
+    NEWORDER:     ["1992-02-01", "2026-06-01"]
+    NFCI:         ["1971-01-08", "2026-08-07"]
+    PAYEMS:       ["1939-01-01", "2026-07-01"]
+    PCEPILFE:     ["1959-01-01", "2026-06-01"]
+    PERMIT:       ["1960-01-01", "2026-07-01"]
+    RRPONTSYD:    ["2003-02-07", "2026-08-17"]
+    SAHMREALTIME: ["1959-12-01", "2026-07-01"]
+    T10Y3M:       ["1982-01-04", "2026-08-17"]
+    T10YFF:       ["1962-01-02", "2026-08-14"]
+    T10YIE:       ["2003-01-02", "2026-08-17"]   # * binds pillar 2
+    T5YIFR:       ["2003-01-02", "2026-08-17"]   # * binds pillar 2
+    UMCSENT:      ["1952-11-01", "2026-06-01"]
+    USREC:        ["1854-12-01", "2026-07-01"]
+    VIXCLS:       ["1990-01-02", "2026-08-17"]
+    WALCL:        ["2002-12-18", "2026-08-12"]
+    WMTSECL1:     ["2002-12-18", "2026-08-12"]
+    WTREGEN:      ["2002-12-18", "2026-08-12"]
+
+  # Series that were not adopted, and why (recorded so the same research is not repeated on review)
+  rejected:
+    USSLIND:          "Stopped updating on 2020-02-01. The page carries no DISCONTINUED notice but it is effectively dead"
+    USALOLITONOSTSAM: "OECD CLI, US version. Stopped updating on 2024-01-01"
+    BAMLH0A0HYM2:     "Exists, but only from 2023-08-21 (ICE BofA licensing restriction). Dropped from the scores and moved to context"
+    BAMLC0A0CM:       "Same as above. IG OAS is also only available from 2023-08-21"
+    TWEXBGSMTH:       "Not discontinued (still updating as of 2026-07). It is the monthly version of the same index with the same start as DTWEXBGS, so the daily version was adopted on frequency grounds"
+    ISM_PMI:          "Removed from FRED (ISM licensing policy)"
+    WMTSECL:          "The old custody-holdings series. Discontinued on 2012-11-07. Use its successor WMTSECL1"
+    BASE:             "St. Louis Fed adjusted monetary base. Discontinued in 2019-12. Use BOGMBASE"

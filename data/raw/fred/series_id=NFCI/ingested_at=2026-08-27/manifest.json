@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "NFCI",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "NFCI",
+    "file_type": "json",
+    "observation_start": "2024-08-27"
+  },
+  "retrieved_at": "2026-08-27T22:55:07.778006+00:00",
+  "sha256": "772bbc1fe7c6f562dfbb779dbf8578ab74a3e427dcc8c2469cf739086ab6e54c",
+  "n_observations": 104,
+  "observation_start": "1971-01-08",
+  "observation_end": "2026-08-21",
+  "last_updated": "2026-08-26 07:40:15-05",
+  "title": "Chicago Fed National Financial Conditions Index",
+  "units": "Index",
+  "frequency_short": "W",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

@@ -1,0 +1,27 @@
+[project]
+name = "tableau-terminal"
+version = "0.1.0"
+description = "FRED -> DuckDB -> Tableau macroeconomic dashboard pipeline"
+requires-python = ">=3.10"
+dependencies = [
+    # Ingestion
+    "httpx",
+    "python-dateutil",
+    "python-dotenv",
+    "pyyaml>=6.0.3",
+    # Transformation
+    "duckdb",
+    "dbt-duckdb",
+    # Analysis and verification
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "scipy",
+    # Notebooks
+    "jupyter",
+    "ipython",
+    "ipykernel",
+]
+
+[tool.setuptools]
+packages = ["ingest", "export"]

@@ -1,0 +1,20 @@
+{
+  "source": "FRED",
+  "series_id": "NEWORDER",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "NEWORDER",
+    "file_type": "json"
+  },
+  "retrieved_at": "2026-08-19T08:02:57.905701+00:00",
+  "sha256": "b7960f9c0d0523258ea6ca190752c7afb5f36565850225d71b62dcbb386dd444",
+  "n_observations": 701,
+  "observation_start": "1992-02-01",
+  "observation_end": "2026-06-01",
+  "last_updated": "2026-08-04 09:07:10-05",
+  "title": "Manufacturers' New Orders: Nondefense Capital Goods Excluding Aircraft",
+  "units": "Millions of Dollars",
+  "frequency_short": "M",
+  "seasonal_adjustment_short": "SA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

@@ -1,0 +1,20 @@
+# 7 series: ICSA (published Thursdays), NFCI, and the Fed balance sheet series
+name: ingest-weekly
+
+on:
+  schedule:
+    - cron: "0 13 * * 4"
+  workflow_dispatch:
+
+# The permissions a called workflow requests cannot exceed those of the caller.
+# The repository default is read, so without this declaration the run is rejected at start
+permissions:
+  contents: write
+
+jobs:
+  call:
+    uses: ./.github/workflows/ingest.yml
+    with:
+      cadence: weekly
+    secrets:
+      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}

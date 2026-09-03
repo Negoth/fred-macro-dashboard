@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "BAA10Y",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "BAA10Y",
+    "file_type": "json",
+    "observation_start": "2024-08-24"
+  },
+  "retrieved_at": "2026-08-24T23:14:15.740601+00:00",
+  "sha256": "c490175857b9aae161c79a113f0b036def45fd5812603c99ec88c6435175160c",
+  "n_observations": 520,
+  "observation_start": "1986-01-02",
+  "observation_end": "2026-08-21",
+  "last_updated": "2026-08-24 16:03:31-05",
+  "title": "Moody's Seasoned Baa Corporate Bond Yield Relative to Yield on 10-Year Treasury Constant Maturity",
+  "units": "Percent",
+  "frequency_short": "D",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

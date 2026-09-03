@@ -1,0 +1,20 @@
+{
+  "source": "FRED",
+  "series_id": "PCEPILFE",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "PCEPILFE",
+    "file_type": "json"
+  },
+  "retrieved_at": "2026-08-19T08:03:20.045293+00:00",
+  "sha256": "57a654e8fac2f678e6ea02d8e6d064c8634ffb868ed4337bf0ec2ad18055ac60",
+  "n_observations": 810,
+  "observation_start": "1959-01-01",
+  "observation_end": "2026-06-01",
+  "last_updated": "2026-07-30 12:01:26-05",
+  "title": "Personal Consumption Expenditures Excluding Food and Energy (Chain-Type Price Index)",
+  "units": "Index 2017=100",
+  "frequency_short": "M",
+  "seasonal_adjustment_short": "SA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

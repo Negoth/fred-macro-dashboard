@@ -1,0 +1,20 @@
+{
+  "source": "FRED",
+  "series_id": "SAHMREALTIME",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "SAHMREALTIME",
+    "file_type": "json"
+  },
+  "retrieved_at": "2026-08-19T08:03:26.593869+00:00",
+  "sha256": "f4b397e1137517f0f2a530fc2c89275f817f1ba9582aa1f5f28a81560f20461e",
+  "n_observations": 800,
+  "observation_start": "1959-12-01",
+  "observation_end": "2026-07-01",
+  "last_updated": "2026-08-07 08:42:22-05",
+  "title": "Real-time Sahm Rule Recession Indicator",
+  "units": "Percentage Points",
+  "frequency_short": "M",
+  "seasonal_adjustment_short": "SA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

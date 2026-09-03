@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "T10YIE",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "T10YIE",
+    "file_type": "json",
+    "observation_start": "2024-08-21"
+  },
+  "retrieved_at": "2026-08-21T23:14:28.699305+00:00",
+  "sha256": "98373a4a3e4297a8cc153b1e28e4de1992ffa1477eb5f17271b28b544640262a",
+  "n_observations": 523,
+  "observation_start": "2003-01-02",
+  "observation_end": "2026-08-21",
+  "last_updated": "2026-08-21 16:03:26-05",
+  "title": "10-Year Breakeven Inflation Rate",
+  "units": "Percent",
+  "frequency_short": "D",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

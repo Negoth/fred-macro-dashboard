@@ -1,0 +1,93 @@
+version: 2
+
+models:
+  - name: stg_fred_observations
+    description: FRED observations unpacked into a typed long format. Deduplicated for strategy A
+    columns:
+      - name: series_id
+        tests: [not_null]
+      - name: observation_date
+        tests: [not_null]
+
+  - name: dim_series
+    description: The series dimension. A join of config/series.yaml (the seed) and the FRED metadata
+    columns:
+      - name: series_id
+        tests: [not_null, unique]
+      - name: pillar
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["growth", "inflation", "financial", "credit", "dollar"]
+              config:
+                # The context series have no pillar
+                where: "pillar is not null and pillar <> ''"
+      - name: pillar_kind
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["coordinate", "score"]
+              config:
+                where: "pillar_kind is not null and pillar_kind <> ''"
+
+  - name: fct_observations
+    description: The observation fact table at its native grain. Read by Tableau
+    columns:
+      - name: series_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_series')
+                field: series_id
+      - name: observation_date
+        tests: [not_null]
+      - name: value
+        tests: [not_null]
+
+  - name: fct_maps
+    description: Coordinates for the two quadrant maps. Filter on map to reuse the same sheet structure
+    columns:
+      - name: month
+        tests: [not_null]
+      - name: map
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["seasons", "growth_inflation"]
+      - name: x
+        tests: [not_null]
+      - name: y
+        tests: [not_null]
+      - name: quadrant
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["Spring", "Summer", "Autumn", "Winter", "Boundary"]
+              config:
+                where: "map = 'seasons'"
+          - accepted_values:
+              arguments:
+                values: ["Goldilocks", "Overheating", "Stagflation", "Reflation", "Boundary"]
+              config:
+                where: "map = 'growth_inflation'"
+
+  - name: fct_pillars
+    description: Pillar scores and the diffusion index. One row per pillar, for the stacked contributions of 6.6
+    columns:
+      - name: month
+        tests: [not_null]
+      - name: pillar
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["growth", "inflation", "financial", "credit", "dollar"]
+
+seeds:
+  - name: series_config
+    columns:
+      - name: series_id
+        tests: [not_null, unique]

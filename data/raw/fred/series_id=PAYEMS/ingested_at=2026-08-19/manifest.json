@@ -1,0 +1,20 @@
+{
+  "source": "FRED",
+  "series_id": "PAYEMS",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "PAYEMS",
+    "file_type": "json"
+  },
+  "retrieved_at": "2026-08-19T08:03:09.192679+00:00",
+  "sha256": "7523651c55393c26490b2142d447face41ca1432bde39e198b031b54b5fc617f",
+  "n_observations": 1051,
+  "observation_start": "1939-01-01",
+  "observation_end": "2026-07-01",
+  "last_updated": "2026-08-07 08:31:34-05",
+  "title": "All Employees, Total Nonfarm",
+  "units": "Thousands of Persons",
+  "frequency_short": "M",
+  "seasonal_adjustment_short": "SA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

@@ -1,0 +1,20 @@
+# 13 economic-statistics series. Fetched after the monthly statistics are published
+name: ingest-monthly
+
+on:
+  schedule:
+    - cron: "0 6 2 * *"
+  workflow_dispatch:
+
+# The permissions a called workflow requests cannot exceed those of the caller.
+# The repository default is read, so without this declaration the run is rejected at start
+permissions:
+  contents: write
+
+jobs:
+  call:
+    uses: ./.github/workflows/ingest.yml
+    with:
+      cadence: monthly
+    secrets:
+      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}

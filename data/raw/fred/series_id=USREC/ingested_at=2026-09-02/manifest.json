@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "USREC",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "USREC",
+    "file_type": "json",
+    "observation_start": "2024-09-02"
+  },
+  "retrieved_at": "2026-09-02T10:47:12.391653+00:00",
+  "sha256": "4a4317ef8125bcebd3362ab592be22a51f2e8bc5dcafafc05480a642239191ce",
+  "n_observations": 24,
+  "observation_start": "1854-12-01",
+  "observation_end": "2026-08-01",
+  "last_updated": "2026-09-01 18:02:27-05",
+  "title": "NBER based Recession Indicators for the United States from the Period following the Peak through the Trough",
+  "units": "+1 or 0",
+  "frequency_short": "M",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

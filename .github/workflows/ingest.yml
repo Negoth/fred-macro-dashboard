@@ -1,0 +1,68 @@
+# Reusable workflow. Called with a cadence from each of the three tracks (daily/weekly/monthly).
+# Copying the same steps into three files invites the accident of fixing only one of them and
+# letting them drift, so the steps live in exactly one place.
+
+name: ingest
+
+on:
+  workflow_call:
+    inputs:
+      cadence:
+        description: "daily | weekly | monthly"
+        required: true
+        type: string
+    secrets:
+      FRED_API_KEY:
+        required: true
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    # Letting it run to the default six hours would hide a problem. A healthy run takes about two minutes
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    # Prevent runs of the same cadence from overlapping. If the write to raw and the commit
+    # collide, the push fails
+    concurrency:
+      group: ingest-${{ inputs.cadence }}
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Fetch
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        # The ingest code already masks api_key in exception messages, but a leak into the logs
+        # cannot be undone, so CI guards against it a second time.
+        # Strategy A (trailing 24-month window). The initial full-history fetch is already done
+        run: uv run python -m ingest.fred --cadence ${{ inputs.cadence }}
+
+      - name: Reflect the config into the seed
+        run: uv run python -m ingest.config_to_seed
+
+      - name: Transform and test
+        # If the tests fail the run stops here, and broken data is never committed
+        run: uv run dbt build --profiles-dir .
+
+      - name: Commit raw
+        # The mart layer is not committed. fct_observations.csv alone is 12MB, and running daily
+        # would grow the repository by 5GB a year. It can be reproduced from raw and the
+        # transformation logic, so it is treated as a build artifact
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/raw seeds
+          if git diff --staged --quiet; then
+            echo "No changes. Nothing to commit"
+            exit 0
+          fi
+          git commit -m "chore(data): ingest ${{ inputs.cadence }} $(date -u +%Y-%m-%d)"
+          # Another track's workflow may have pushed first, so rebase before pushing
+          git pull --rebase origin ${{ github.ref_name }}
+          git push

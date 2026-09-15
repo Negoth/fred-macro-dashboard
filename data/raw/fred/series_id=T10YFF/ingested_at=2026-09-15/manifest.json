@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "T10YFF",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "T10YFF",
+    "file_type": "json",
+    "observation_start": "2024-09-15"
+  },
+  "retrieved_at": "2026-09-15T01:14:08.149439+00:00",
+  "sha256": "342e1a494afa1594e847e08630f749521a80e58a5f2a27689c0c0229a68a3557",
+  "n_observations": 520,
+  "observation_start": "1962-01-02",
+  "observation_end": "2026-09-11",
+  "last_updated": "2026-09-14 16:03:50-05",
+  "title": "10-Year Treasury Constant Maturity Minus Federal Funds Rate",
+  "units": "Percent",
+  "frequency_short": "D",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

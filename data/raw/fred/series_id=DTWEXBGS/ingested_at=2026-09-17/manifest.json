@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "DTWEXBGS",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "DTWEXBGS",
+    "file_type": "json",
+    "observation_start": "2024-09-17"
+  },
+  "retrieved_at": "2026-09-17T01:07:59.563006+00:00",
+  "sha256": "6a35c365e840b6c6c3ac43c8e13d9d4705599f4aa5b7bd7bc7efe16433f41473",
+  "n_observations": 519,
+  "observation_start": "2006-01-02",
+  "observation_end": "2026-09-11",
+  "last_updated": "2026-09-14 15:16:42-05",
+  "title": "Nominal Broad U.S. Dollar Index",
+  "units": "Index Jan 2006=100",
+  "frequency_short": "D",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

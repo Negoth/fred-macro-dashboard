@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "WMTSECL1",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "WMTSECL1",
+    "file_type": "json",
+    "observation_start": "2024-09-17"
+  },
+  "retrieved_at": "2026-09-17T17:28:07.023986+00:00",
+  "sha256": "44434215e9f7a5cb226e8be306d98866c8e26c5ce2f1f97f7e4f4478b9b58e0e",
+  "n_observations": 104,
+  "observation_start": "2002-12-18",
+  "observation_end": "2026-09-09",
+  "last_updated": "2026-09-10 15:32:48-05",
+  "title": "Memorandum Items: Custody Holdings: Marketable U.S. Treasury Securities: Wednesday Level",
+  "units": "Millions of U.S. Dollars",
+  "frequency_short": "W",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

@@ -1,5 +1,9 @@
 -- Series dimension. Overlays FRED's own metadata onto config/series.yaml (the seed).
 -- Tableau reads only this and fct_observations.
+--
+-- `pillar` survived the retirement of the pillar scores as a plain grouping category; the
+-- fields that drove the scoring (pillar_kind, transform, sign, season_axis, season_role,
+-- is_scored) went with the models that read them.
 
 select
     c.series_id,
@@ -10,12 +14,7 @@ select
     coalesce(m.frequency_short, c.freq) as frequency_short,
     m.seasonal_adjustment_short,
     c.pillar,
-    c.pillar_kind,
-    c.transform,
-    c.sign,
-    c.season_axis,
-    c.season_role,
-    c.is_scored,
+    c.role,
     c.is_derived,
     c.derived_from,
     c.origin,

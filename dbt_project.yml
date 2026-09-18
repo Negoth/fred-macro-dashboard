@@ -13,31 +13,17 @@ vars:
   raw_observations: "data/raw/fred/*/*/response.json.gz"
   raw_series_meta: "data/raw/fred/*/*/series_meta.json.gz"
 
-  # Must be kept in sync with meta.z in config/series.yaml
-  # Where the dashboard display starts. The z-score population is unaffected by this and uses the full history
+  # Must be kept in sync with meta.history_start in config/series.yaml.
+  # Display filter only -- it never limits what is ingested or computed
   history_start: "2003-01-01"
-
-  # Must be kept in sync with seasons.thresholds in config/series.yaml
-  season_deadzone: 0.25
-  season_smoothing_months: 3
-
-  z_config:
-    min_months: 60
-    clip: 3.0
-    # Observations per month, by frequency. Used to convert min_months into an observation count
-    obs_per_month:
-      D: 21
-      W: 4.33
-      M: 1
-      Q: 0.34
 
 models:
   tableau_terminal:
     staging:
       +materialized: view
     intermediate:
-      # Materialised as tables. As views, each of the four marts and their tests re-ran the
-      # transform and z-score computation from the raw JSON, which cost 6x the CPU time
+      # Materialised as tables. As views, every mart and its tests re-ran the whole
+      # computation from the raw JSON, which cost 6x the CPU time
       +materialized: table
     marts:
       +materialized: table

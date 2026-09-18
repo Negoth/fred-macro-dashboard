@@ -1,0 +1,5 @@
+key,label,curve_move,rates,curve,description,asset_class,bonds,sectors
+spring,Spring,Bear steepening,rising,steepening,"Long rates rise and the curve steepens, as markets start to fear hikes",Developed-market equities,"High-yield corporates, EM bonds",Technology
+summer,Summer,Bear flattening,rising,flattening,"Short rates rise and the curve flattens, as the Fed hikes",Emerging-market equities,Australian-dollar bonds,Materials
+autumn,Autumn,Bull flattening,falling,flattening,"Long rates fall and the curve flattens, as markets expect cuts. The curve inverts in late autumn",Bonds,Developed-market foreign bonds,"Utilities, pharma"
+winter,Winter,Bull steepening,falling,steepening,"Short rates fall and the curve steepens, as the Fed cuts",REITs,Domestic bonds,"Banks, retail"

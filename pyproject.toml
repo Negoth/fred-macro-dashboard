@@ -9,6 +9,9 @@ dependencies = [
     "python-dateutil",
     "python-dotenv",
     "pyyaml>=6.0.3",
+    # The S&P 500 is not on FRED at a useful length (FRED's own SP500 covers 10 years).
+    # Unofficial API, so ingest/equities.py exits non-zero on failure to stop the CI run
+    "yfinance>=1.7.0",
     # Transformation
     "duckdb",
     "dbt-duckdb",

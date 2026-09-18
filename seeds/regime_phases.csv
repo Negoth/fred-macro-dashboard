@@ -1,0 +1,5 @@
+key,phase_no,label,equities,spreads,banks,companies
+riskon,1,Risk-on,Stocks up,spreads narrowing,expanding lending,"profits improving, credit strong"
+leverage,2,Leverage,Stocks up,spreads widening,turning cautious,"borrowing aggressively, credit weakening"
+riskoff,3,Risk-off,Stocks down,spreads widening,cutting lending,"profits falling, credit weak"
+repair,4,Deleveraging,Stocks down,spreads narrowing,lending attitude improving,"paying down debt, credit recovering"

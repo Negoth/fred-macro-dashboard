@@ -43,6 +43,12 @@ jobs:
         # Strategy A (trailing 24-month window). The initial full-history fetch is already done
         run: uv run python -m ingest.fred --cadence ${{ inputs.cadence }}
 
+      - name: Fetch equities
+        # yfinance is an unofficial API, so this step is allowed to fail the run: the
+        # signals must never be rebuilt from a partial S&P 500 history. A no-op on the
+        # weekly and monthly tracks, where no symbol carries that cadence
+        run: uv run python -m ingest.equities --cadence ${{ inputs.cadence }}
+
       - name: Reflect the config into the seed
         run: uv run python -m ingest.config_to_seed
 

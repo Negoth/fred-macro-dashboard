@@ -1,0 +1,13 @@
+key,monitor_group,title,unit,score_rule,score_t1,score_t2,flag_key,flag_rule,flag_threshold,ref_lines,first_month,clip
+ff12,core_five,"1 - Fed funds, year-over-year change",pp,le,0.25,,,,,0.25,,0
+spr,core_five,2 - Term spread (10-year minus fed funds),pp,band,1.0,0.0,,,,0|1,,0
+y1012,core_five,"3 - 10-year yield, year-over-year change",pp,ge,0.0,,,,,0,,0
+baa12,core_five,"4 - Corporate spread, year-over-year change",pp,le,0.0,,,,,0,,0
+usd12,core_five,"5 - Dollar index, year-over-year change",pct,le,0.0,,,,,0,2007-01-01,0
+y2ff,added,2-year yield minus fed funds,pp,,,,T2,lt,0.0,0,,0
+ffgap,added,Fed funds minus FOMC longer-run projection,pp,,,,S2,gt,0.0,0,2012-02-01,0
+sloos,added,Bank lending standards (SLOOS),pct,,,,S3,gt,0.0,0,1990-05-01,0
+sahm,added,Sahm indicator,idx,,,,T3,ge,0.5,0.5,,1
+claims,added,"Initial jobless claims (thousands, monthly average)",k,,,,H2,none,,,,1
+spxgap,added,S&P 500 vs its 10-month average,pct,,,,T4,lt,0.0,0,,0
+baa,added,Corporate spread level (BAA minus 10-year),pp,,,,,none,,,,0

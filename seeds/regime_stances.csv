@@ -1,0 +1,5 @@
+key,label,description
+normal,Stay the course,Keep the target allocation
+nochase,Don't chase,Hold off on adding to positions or opening new ones
+reduce,Cut equities,Take the equity weight below target
+restore,Rebuild equities,Bring the equity weight back to target

@@ -126,3 +126,9 @@ logs/
 # fct_observations.csv alone is 12MB, so committing it daily would bloat the repository.
 # raw (immutable, around 1MB) and the transformation logic are committed, so reproducibility holds
 data/mart/
+
+# workspace
+*.code-workspace
+
+# Claude
+CLAUDE.md

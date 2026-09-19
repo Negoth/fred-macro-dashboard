@@ -1,0 +1,20 @@
+{
+  "source": "FRED",
+  "series_id": "DRTSCILM",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "DRTSCILM",
+    "file_type": "json"
+  },
+  "retrieved_at": "2026-09-19T07:03:44.420779+00:00",
+  "sha256": "26913c5bc87977a156ca09d746ae8a9816a38f2b61f04a5deb8d0003996e2289",
+  "n_observations": 146,
+  "observation_start": "1990-04-01",
+  "observation_end": "2026-07-01",
+  "last_updated": "2026-08-03 13:01:40-05",
+  "title": "Net Percentage of Domestic Banks Tightening Standards for Commercial and Industrial Loans to Large and Middle-Market Firms",
+  "units": "Percent",
+  "frequency_short": "Q",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

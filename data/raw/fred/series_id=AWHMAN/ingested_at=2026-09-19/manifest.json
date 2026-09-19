@@ -1,0 +1,20 @@
+{
+  "source": "FRED",
+  "series_id": "AWHMAN",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "AWHMAN",
+    "file_type": "json"
+  },
+  "retrieved_at": "2026-09-19T07:03:42.417923+00:00",
+  "sha256": "3f9aea68a39718e4332b66959425cc60791fbc5eb0f69937abe3f9c658086726",
+  "n_observations": 1136,
+  "observation_start": "1939-01-01",
+  "observation_end": "2026-08-01",
+  "last_updated": "2026-09-04 08:29:42-05",
+  "title": "Average Weekly Hours of Production and Nonsupervisory Employees, Manufacturing",
+  "units": "Hours",
+  "frequency_short": "M",
+  "seasonal_adjustment_short": "SA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

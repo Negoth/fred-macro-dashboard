@@ -1,0 +1,20 @@
+{
+  "source": "FRED",
+  "series_id": "AHETPI",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "AHETPI",
+    "file_type": "json"
+  },
+  "retrieved_at": "2026-09-19T07:03:41.134064+00:00",
+  "sha256": "3175fd7a74a323281087c12a80d76a20655247f9d4315e1bcaaf57c1bb40f66f",
+  "n_observations": 752,
+  "observation_start": "1964-01-01",
+  "observation_end": "2026-08-01",
+  "last_updated": "2026-09-04 08:29:41-05",
+  "title": "Average Hourly Earnings of Production and Nonsupervisory Employees, Total Private",
+  "units": "Dollars per Hour",
+  "frequency_short": "M",
+  "seasonal_adjustment_short": "SA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

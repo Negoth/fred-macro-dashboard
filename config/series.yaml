@@ -283,7 +283,224 @@ context:
     title_display: Sahm rule recession indicator
     freq: M
     ingest: monthly
-    usage: An external benchmark for sanity-checking the regime labels. Not included in the scores
+    usage: |
+      Breakdown flag T3 (>= 0.5). Carried forward up to 2 months to cover the publication lag.
+      Fires 1-3 months after a recession starts, so it confirms rather than warns
+      (false positive in 2024-07).
+
+  # ── Regime inputs ─────────────────────────────────────────────────────────────
+  # Added for the monetary policy cycle / credit cycle dashboard. Not dashboard series in
+  # their own right; they are the raw material for int_regime_monthly and fct_yield_curve.
+
+  - id: DFF
+    title_display: Fed funds rate (effective, daily)
+    freq: D
+    ingest: daily
+    usage: |
+      The short-rate leg of the season, as a monthly mean. Replaces FEDFUNDS, which is published
+      only after month-end and so cannot carry a provisional current month.
+      Also drives S1 (10Y - FF < 0), S2 (FF > longer-run projection) and T2 (2Y - FF < 0).
+
+  - id: DGS2
+    title_display: 2-year Treasury yield
+    freq: D
+    ingest: daily
+    usage: |
+      Breakdown flag T2 (2Y - FF < 0): market expectations move ahead of the policy rate,
+      so an inversion here prices cuts. Also a tenor on the yield curve snapshot.
+
+  - id: DGS3MO
+    title_display: 3-month Treasury yield
+    freq: D
+    ingest: daily
+    usage: Yield curve snapshot only (shortest tenor)
+
+  - id: DGS5
+    title_display: 5-year Treasury yield
+    freq: D
+    ingest: daily
+    usage: Yield curve snapshot only
+
+  - id: DGS30
+    title_display: 30-year Treasury yield
+    freq: D
+    ingest: daily
+    usage: |
+      Yield curve snapshot only (longest tenor). Note the 2002-2006 gap, when the 30-year was
+      not issued: the snapshot takes only dates where every tenor is present.
+
+  - id: FEDTARMDLR
+    title_display: FOMC longer-run fed funds projection (median)
+    freq: Q
+    ingest: monthly
+    usage: |
+      Vulnerability flag S2 (FF above neutral). The FOMC's own estimate of neutral, so the
+      threshold is not one we chose. Available from 2012; before that S2 counts as off.
+
+# ── Equities ──────────────────────────────────────────────────────────────────
+# Not on FRED, so this is a separate block with its own ingester (ingest/equities.py).
+# FRED's own SP500 series only goes back 10 years, which is far too short for a panel
+# that starts in 1985.
+equities:
+  - id: GSPC
+    symbol: "^GSPC"
+    source: yfinance
+    title_display: S&P 500
+    freq: D
+    ingest: daily
+    usage: |
+      Month-end close (the last close in the month, not the monthly mean, unlike the rates).
+      Drives the credit cycle phase with the BAA spread, and flags T4 / H3 against its
+      10-month moving average.
+    caveat: |
+      yfinance is an unofficial API. A failed fetch must stop the CI run rather than update
+      the signals from partial data. A fallback source is still an open question.
+
+# ── Regime signals ────────────────────────────────────────────────────────────
+# The monetary policy cycle (about 5 years) and the credit cycle (about 10 years) are two
+# separate cycles, not one circle. Every threshold below is a natural boundary, a policy unit
+# or an official estimate -- never a value fitted to history. Measurement windows were fixed
+# in advance. History is used to falsify the rules, not to tune them.
+regime:
+  # The panel starts well before the display window so the six-month changes and the
+  # 10-month moving average are warm by the time anything is shown.
+  panel_start: "1985-01-01"
+  display_start: "1987-01-01"
+
+  season:
+    window_months: 6   # long enough to catch a ~15-month season in its first half
+    gate: 0.25         # one policy step. Below this on both ends, the previous season carries over
+
+  phase:
+    window_months: 6
+    confirm_months: 2  # a single month's move does not change the phase
+
+  stance:
+    vulnerability_min: 2   # never act on a single indicator
+    breakdown_min: 2
+    recovery_min: 2
+    # Vulnerability flags such as inversion fade once a breakdown starts, so the stance has to
+    # remember them. 24 months is the commonly cited upper bound on inversion -> recession.
+    memory_months: 24
+    # Open question: requiring T1 (risk-off) for Cut equities was proposed to damp the 2022-25
+    # whipsaw. Re-simulated, it does not -- both large 2022 episodes survive and the 2002
+    # second leg turns from a -9.5% avoided decline into a +6.9% missed rally. Left off.
+    require_t1: false
+
+  seasons:
+    - key: spring
+      label: Spring
+      curve_move: Bear steepening
+      rates: rising
+      curve: steepening
+      description: Long rates rise and the curve steepens, as markets start to fear hikes
+      asset_class: Developed-market equities
+      bonds: High-yield corporates, EM bonds
+      sectors: Technology
+    - key: summer
+      label: Summer
+      curve_move: Bear flattening
+      rates: rising
+      curve: flattening
+      description: Short rates rise and the curve flattens, as the Fed hikes
+      asset_class: Emerging-market equities
+      bonds: Australian-dollar bonds
+      sectors: Materials
+    - key: autumn
+      label: Autumn
+      curve_move: Bull flattening
+      rates: falling
+      curve: flattening
+      description: Long rates fall and the curve flattens, as markets expect cuts. The curve inverts in late autumn
+      asset_class: Bonds
+      bonds: Developed-market foreign bonds
+      sectors: Utilities, pharma
+    - key: winter
+      label: Winter
+      curve_move: Bull steepening
+      rates: falling
+      curve: steepening
+      description: Short rates fall and the curve steepens, as the Fed cuts
+      asset_class: REITs
+      bonds: Domestic bonds
+      sectors: Banks, retail
+
+  phases:
+    - key: riskon
+      phase_no: 1
+      label: Risk-on
+      equities: Stocks up
+      spreads: spreads narrowing
+      banks: expanding lending
+      companies: profits improving, credit strong
+    - key: leverage
+      phase_no: 2
+      label: Leverage
+      equities: Stocks up
+      spreads: spreads widening
+      banks: turning cautious
+      companies: borrowing aggressively, credit weakening
+    - key: riskoff
+      phase_no: 3
+      label: Risk-off
+      equities: Stocks down
+      spreads: spreads widening
+      banks: cutting lending
+      companies: profits falling, credit weak
+    - key: repair
+      phase_no: 4
+      label: Deleveraging
+      equities: Stocks down
+      spreads: spreads narrowing
+      banks: lending attitude improving
+      companies: paying down debt, credit recovering
+
+  stances:
+    - key: normal
+      label: Stay the course
+      description: Keep the target allocation
+    - key: nochase
+      label: Don't chase
+      description: Hold off on adding to positions or opening new ones
+    - key: reduce
+      label: Cut equities
+      description: Take the equity weight below target
+    - key: restore
+      label: Rebuild equities
+      description: Bring the equity weight back to target
+
+  flags:
+    - { key: S1, stage: vulnerability, label: Inverted curve,             rule: "10Y - FF < 0",                     rationale: Natural boundary,                                                                       series: "DGS10, DFF" }
+    - { key: S2, stage: vulnerability, label: Policy rate above neutral,  rule: "FF > FOMC longer-run projection",  rationale: "The FOMC's own estimate of neutral. Available from 2012; counts as off before that",   series: "DFF, FEDTARMDLR" }
+    - { key: S3, stage: vulnerability, label: Banks tightening lending,   rule: "DRTSCILM > 0",                     rationale: "More banks tightening than easing. Applied from the month after publication",          series: DRTSCILM }
+    - { key: S4, stage: vulnerability, label: Leverage phase,             rule: "Credit phase 2",                   rationale: Spreads widening while stocks rise marks a market near its top,                          series: "(phase)" }
+    - { key: T1, stage: breakdown,     label: Risk-off phase,             rule: "Credit phase 3",                   rationale: Stocks falling and spreads widening at the same time,                                    series: "(phase)" }
+    - { key: T2, stage: breakdown,     label: Markets pricing cuts,       rule: "2Y - FF < 0",                      rationale: Natural boundary. Market expectations move ahead of the policy rate,                     series: "DGS2, DFF" }
+    - { key: T3, stage: breakdown,     label: Labor market weakening,     rule: "Sahm indicator >= 0.5",            rationale: "Rule of thumb. Fires 1-3 months after a recession starts, so it confirms rather than warns (false positive 2024-07)", series: SAHMREALTIME }
+    - { key: T4, stage: breakdown,     label: Stocks break trend,         rule: "S&P 500 < its 10-month average",   rationale: "Trends tend to persist. Noisy alone, so it only counts alongside vulnerability",        series: "^GSPC" }
+    - { key: H1, stage: recovery,      label: Deleveraging phase,         rule: "Credit phase 4",                   rationale: Spread peaks sat within +/-3 months of all 10 market troughs since 1990,                 series: "(phase)" }
+    - { key: H2, stage: recovery,      label: Jobless claims turning down, rule: "3-month change in claims < 0",    rationale: A change of direction (natural boundary),                                                series: ICSA }
+    - { key: H3, stage: recovery,      label: Stocks regain trend,        rule: "S&P 500 > its 10-month average",   rationale: The mirror image of a trend break,                                                       series: "^GSPC" }
+
+  # Indicator monitor. `score_rule` picks a CASE branch in fct_indicator_monitor:
+  #   le    +2 if value <= t1, else -2
+  #   ge    +2 if value >= t1, else -2
+  #   band  +2 if value >= t1; 0 if value >= t2; else -2
+  # `flag_rule` is lt | gt against flag_threshold. `clip` caps the drawn y-axis at
+  # median + 6*MAD so the 2008-09 and 2020 spikes do not flatten normal moves (display only).
+  indicators:
+    - { key: ff12,   monitor_group: core_five, title: "1 - Fed funds, year-over-year change",        unit: pp,  score_rule: le,   score_t1: 0.25, ref_lines: "0.25" }
+    - { key: spr,    monitor_group: core_five, title: "2 - Term spread (10-year minus fed funds)",   unit: pp,  score_rule: band, score_t1: 1.0, score_t2: 0.0, ref_lines: "0|1" }
+    - { key: y1012,  monitor_group: core_five, title: "3 - 10-year yield, year-over-year change",    unit: pp,  score_rule: ge,   score_t1: 0.0,  ref_lines: "0" }
+    - { key: baa12,  monitor_group: core_five, title: "4 - Corporate spread, year-over-year change", unit: pp,  score_rule: le,   score_t1: 0.0,  ref_lines: "0" }
+    - { key: usd12,  monitor_group: core_five, title: "5 - Dollar index, year-over-year change",     unit: pct, score_rule: le,   score_t1: 0.0,  ref_lines: "0", first_month: "2007-01-01" }
+    - { key: y2ff,   monitor_group: added, title: "2-year yield minus fed funds",                 unit: pp,  flag_key: T2, flag_rule: lt, flag_threshold: 0.0, ref_lines: "0" }
+    - { key: ffgap,  monitor_group: added, title: "Fed funds minus FOMC longer-run projection",   unit: pp,  flag_key: S2, flag_rule: gt, flag_threshold: 0.0, ref_lines: "0", first_month: "2012-02-01" }
+    - { key: sloos,  monitor_group: added, title: "Bank lending standards (SLOOS)",               unit: pct, flag_key: S3, flag_rule: gt, flag_threshold: 0.0, ref_lines: "0", first_month: "1990-05-01" }
+    - { key: sahm,   monitor_group: added, title: "Sahm indicator",                               unit: idx, flag_key: T3, flag_rule: ge, flag_threshold: 0.5, ref_lines: "0.5", clip: true }
+    - { key: claims, monitor_group: added, title: "Initial jobless claims (thousands, monthly average)", unit: k, flag_key: H2, flag_rule: none, ref_lines: "", clip: true }
+    - { key: spxgap, monitor_group: added, title: "S&P 500 vs its 10-month average",              unit: pct, flag_key: T4, flag_rule: lt, flag_threshold: 0.0, ref_lines: "0" }
+    - { key: baa,    monitor_group: added, title: "Corporate spread level (BAA minus 10-year)",   unit: pp,  flag_rule: none, ref_lines: "" }
 
 # ── Results of the existence check ────────────────────────────────────────────
 # Carried out 2026-08-18. https://fred.stlouisfed.org/graph/fredgraph.csv?id=<ID> (no API key needed)

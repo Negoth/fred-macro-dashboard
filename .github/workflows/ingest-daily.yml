@@ -5,6 +5,12 @@ on:
   schedule:
     - cron: "0 23 * * 1-5"
   workflow_dispatch:
+    inputs:
+      full:
+        description: "Fetch the full history (one-off backfill)"
+        required: false
+        default: false
+        type: boolean
 
 # The permissions a called workflow requests cannot exceed those of the caller.
 # The repository default is read, so without this declaration the run is rejected at start
@@ -16,5 +22,7 @@ jobs:
     uses: ./.github/workflows/ingest.yml
     with:
       cadence: daily
+      # false on a schedule, since github.event.inputs is null there
+      full: ${{ github.event.inputs.full == 'true' }}
     secrets:
       FRED_API_KEY: ${{ secrets.FRED_API_KEY }}

@@ -1,0 +1,12 @@
+key,stage,label,rule,rationale,series
+S1,vulnerability,Inverted curve,10Y - FF < 0,Natural boundary,"DGS10, DFF"
+S2,vulnerability,Policy rate above neutral,FF > FOMC longer-run projection,The FOMC's own estimate of neutral. Available from 2012; counts as off before that,"DFF, FEDTARMDLR"
+S3,vulnerability,Banks tightening lending,DRTSCILM > 0,More banks tightening than easing. Applied from the month after publication,DRTSCILM
+S4,vulnerability,Leverage phase,Credit phase 2,Spreads widening while stocks rise marks a market near its top,(phase)
+T1,breakdown,Risk-off phase,Credit phase 3,Stocks falling and spreads widening at the same time,(phase)
+T2,breakdown,Markets pricing cuts,2Y - FF < 0,Natural boundary. Market expectations move ahead of the policy rate,"DGS2, DFF"
+T3,breakdown,Labor market weakening,Sahm indicator >= 0.5,"Rule of thumb. Fires 1-3 months after a recession starts, so it confirms rather than warns (false positive 2024-07)",SAHMREALTIME
+T4,breakdown,Stocks break trend,S&P 500 < its 10-month average,"Trends tend to persist. Noisy alone, so it only counts alongside vulnerability",^GSPC
+H1,recovery,Deleveraging phase,Credit phase 4,Spread peaks sat within +/-3 months of all 10 market troughs since 1990,(phase)
+H2,recovery,Jobless claims turning down,3-month change in claims < 0,A change of direction (natural boundary),ICSA
+H3,recovery,Stocks regain trend,S&P 500 > its 10-month average,The mirror image of a trend break,^GSPC

@@ -48,3 +48,67 @@ seeds:
     columns:
       - name: series_id
         tests: [not_null, unique]
+
+  # Regime reference data, generated from the `regime:` block of config/series.yaml.
+  # Uniqueness matters: fct_regime joins to these on `key`, so a duplicate would fan out.
+  - name: regime_seasons
+    description: Season labels, what the curve is doing, and what tends to do well in each
+    columns:
+      - name: key
+        tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values: ["spring", "summer", "autumn", "winter"]
+
+  - name: regime_phases
+    description: Credit cycle phase labels and how banks and companies behave in each
+    columns:
+      - name: key
+        tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values: ["riskon", "leverage", "riskoff", "repair"]
+
+  - name: regime_stances
+    description: The four portfolio stances and what each means
+    columns:
+      - name: key
+        tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values: ["normal", "nochase", "reduce", "restore"]
+
+  - name: regime_flags
+    description: The 11 signal flags, their rules and why each threshold sits where it does
+    columns:
+      - name: key
+        tests: [not_null, unique]
+      - name: stage
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["vulnerability", "breakdown", "recovery"]
+
+  - name: regime_indicators
+    description: "Indicator monitor definitions: thresholds, the +/-2 rules and the flag each maps to"
+    columns:
+      - name: key
+        tests: [not_null, unique]
+      - name: monitor_group
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["core_five", "added"]
+      - name: score_rule
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["le", "ge", "band"]
+              config:
+                where: "score_rule is not null"

@@ -56,3 +56,26 @@ def fetch_targets(cfg: dict[str, Any], cadence: str | None = None) -> list[dict[
             raise ValueError(f"unknown cadence: {cadence} (expected one of {CADENCES})")
         targets = [t for t in targets if t["ingest"] == cadence]
     return targets
+
+
+def equity_targets(cfg: dict[str, Any], cadence: str | None = None) -> list[dict[str, str]]:
+    """Resolve the equity series, which are not on FRED and have their own ingester.
+
+    Kept separate from fetch_targets because the two are fetched by different modules
+    against different APIs. Same cadence filter, so the CI tracks route both the same way.
+    """
+    targets = [
+        {
+            "series_id": item["id"],
+            "symbol": item["symbol"],
+            "source": item.get("source", "yfinance"),
+            "ingest": item["ingest"],
+        }
+        for item in cfg.get("equities", [])
+    ]
+    targets.sort(key=lambda d: d["series_id"])
+    if cadence:
+        if cadence not in CADENCES:
+            raise ValueError(f"unknown cadence: {cadence} (expected one of {CADENCES})")
+        targets = [t for t in targets if t["ingest"] == cadence]
+    return targets

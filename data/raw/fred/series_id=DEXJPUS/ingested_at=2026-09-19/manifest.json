@@ -4,12 +4,11 @@
   "endpoint": "https://api.stlouisfed.org/fred/series/observations",
   "request_params": {
     "series_id": "DEXJPUS",
-    "file_type": "json",
-    "observation_start": "2024-09-19"
+    "file_type": "json"
   },
-  "retrieved_at": "2026-09-19T01:01:16.259103+00:00",
-  "sha256": "d5803cd26cea732fbd2a259d90d5e609ee1f0a195388070ebb37342af73be2c3",
-  "n_observations": 517,
+  "retrieved_at": "2026-09-19T07:03:44.543419+00:00",
+  "sha256": "7e8bf5268086b4b98a23efba59a3cd9c825efef33bea08af0c705adf80ca85fa",
+  "n_observations": 14530,
   "observation_start": "1971-01-04",
   "observation_end": "2026-09-11",
   "last_updated": "2026-09-14 15:16:37-05",

@@ -11,6 +11,11 @@ on:
         description: "daily | weekly | monthly"
         required: true
         type: string
+      full:
+        description: "Fetch the full history instead of the trailing window. One-off backfills only"
+        required: false
+        default: false
+        type: boolean
     secrets:
       FRED_API_KEY:
         required: true
@@ -40,14 +45,16 @@ jobs:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         # The ingest code already masks api_key in exception messages, but a leak into the logs
         # cannot be undone, so CI guards against it a second time.
-        # Strategy A (trailing 24-month window). The initial full-history fetch is already done
-        run: uv run python -m ingest.fred --cadence ${{ inputs.cadence }}
+        # Strategy A (trailing 24-month window) on a schedule. `full` is for the one-off
+        # backfill a new series needs: the scheduled runs can never widen their own window,
+        # so without it a series added later is stuck with 24 months forever
+        run: uv run python -m ingest.fred --cadence ${{ inputs.cadence }} ${{ inputs.full && '--full' || '' }}
 
       - name: Fetch equities
         # yfinance is an unofficial API, so this step is allowed to fail the run: the
         # signals must never be rebuilt from a partial S&P 500 history. A no-op on the
         # weekly and monthly tracks, where no symbol carries that cadence
-        run: uv run python -m ingest.equities --cadence ${{ inputs.cadence }}
+        run: uv run python -m ingest.equities --cadence ${{ inputs.cadence }} ${{ inputs.full && '--full' || '' }}
 
       - name: Reflect the config into the seed
         run: uv run python -m ingest.config_to_seed
@@ -68,7 +75,7 @@ jobs:
             echo "No changes. Nothing to commit"
             exit 0
           fi
-          git commit -m "chore(data): ingest ${{ inputs.cadence }} $(date -u +%Y-%m-%d)"
+          git commit -m "chore(data): ${{ inputs.full && 'backfill' || 'ingest' }} ${{ inputs.cadence }} $(date -u +%Y-%m-%d)"
           # Another track's workflow may have pushed first, so rebase before pushing
           git pull --rebase origin ${{ github.ref_name }}
           git push

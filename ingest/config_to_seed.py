@@ -17,16 +17,10 @@ OUT = ROOT / "seeds" / "series_config.csv"
 FIELDS = [
     "series_id",
     "title_display",
-    "pillar",
-    "pillar_kind",   # coordinate | score
+    "pillar",        # plain grouping category; the pillar scores themselves were retired
     "freq",
     "ingest",
-    "transform",
-    "sign",
-    "season_axis",   # rate | credit | (empty)
-    "season_role",   # leading_signal | (empty)
     "role",          # series | derived | component | context
-    "is_scored",     # whether it counts toward the pillar score
     "is_derived",    # whether it is a derived series
     "derived_from",  # components of a derived series (| separated)
     "origin",        # initial = inherited from the initial 5-series proposal
@@ -34,40 +28,32 @@ FIELDS = [
 
 
 def build_rows(cfg: dict) -> list[dict]:
-    pillars = cfg.get("pillars", {})
     rows: list[dict] = []
 
-    def base(item: dict, *, scored: bool, derived: bool, role: str) -> dict:
-        pillar = item.get("pillar", "")
+    def base(item: dict, *, derived: bool, role: str) -> dict:
         return {
             "series_id": item["id"],
             "title_display": item.get("title_display", ""),
-            "pillar": pillar,
-            "pillar_kind": pillars.get(pillar, {}).get("kind", ""),
+            "pillar": item.get("pillar", ""),
             "freq": item.get("freq", ""),
             "ingest": item.get("ingest", ""),
-            "transform": item.get("transform", ""),
-            "sign": item.get("sign", ""),
-            "season_axis": item.get("season_axis", ""),
-            "season_role": item.get("season_role", ""),
             "role": role,
-            "is_scored": int(scored),
             "is_derived": int(derived),
             "derived_from": "|".join(item.get("inputs", [])),
             "origin": item.get("origin", ""),
         }
 
     for item in cfg.get("series", []):
-        rows.append(base(item, scored=True, derived=False, role="series"))
+        rows.append(base(item, derived=False, role="series"))
     for item in cfg.get("derived", []):
-        rows.append(base(item, scored=True, derived=True, role="derived"))
+        rows.append(base(item, derived=True, role="derived"))
     for item in cfg.get("context", []):
-        # Not counted in the scores, but used for display, shading and sanity checks
-        rows.append(base(item, scored=False, derived=False, role="context"))
+        # Used for display, shading and sanity checks rather than as a dashboard signal
+        rows.append(base(item, derived=False, role="context"))
 
     # Components of the derived series. They are fetched from FRED and land in
     # fct_observations, so dim_series needs rows for them too (without them the
-    # relationship test fails). They do not count toward the pillar scores themselves
+    # relationship test fails)
     known = {r["series_id"] for r in rows}
     for item in cfg.get("derived", []):
         for raw_id in item.get("inputs", []):
@@ -78,15 +64,9 @@ def build_rows(cfg: dict) -> list[dict]:
                 "series_id": raw_id,
                 "title_display": f"Component of {item['title_display']}",
                 "pillar": "",
-                "pillar_kind": "",
                 "freq": "",
                 "ingest": item.get("ingest", ""),
-                "transform": "",
-                "sign": "",
-                "season_axis": "",
-                "season_role": "",
                 "role": "component",
-                "is_scored": 0,
                 "is_derived": 0,
                 "derived_from": "",
                 "origin": "",
@@ -103,8 +83,11 @@ def main() -> int:
         w = csv.DictWriter(f, fieldnames=FIELDS)
         w.writeheader()
         w.writerows(rows)
-    scored = sum(r["is_scored"] for r in rows)
-    print(f"{OUT.relative_to(ROOT)}: {len(rows)} rows (scored {scored} / context {len(rows)-scored})")
+    by_role: dict[str, int] = {}
+    for r in rows:
+        by_role[r["role"]] = by_role.get(r["role"], 0) + 1
+    detail = ", ".join(f"{k} {v}" for k, v in sorted(by_role.items()))
+    print(f"{OUT.relative_to(ROOT)}: {len(rows)} rows ({detail})")
     return 0
 
 

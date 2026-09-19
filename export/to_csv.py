@@ -15,8 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 WAREHOUSE = ROOT / "data" / "warehouse.duckdb"
 OUT_DIR = ROOT / "data" / "mart"
 
-# The marts handed to Tableau. More will be added here in M2 / M3
-TABLES = ["dim_series", "fct_observations", "fct_monthly", "fct_pillars", "fct_maps"]
+# The marts handed to Tableau. The regime marts are added as they land
+TABLES = ["dim_series", "fct_observations"]
 
 
 def main(argv: list[str] | None = None) -> int:

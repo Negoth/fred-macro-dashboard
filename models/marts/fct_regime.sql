@@ -97,12 +97,7 @@ flags as (
         coalesce(phase = 'repair', false)   as f_h1,
         coalesce(claims3 < 0, false)        as f_h2,
         coalesce(spx > sma10, false)        as f_h3
-    from (
-        select *,
-            case when count(spx) over w10 = 10 then avg(spx) over w10 end as sma10
-        from phase
-        window w10 as (order by month rows between 9 preceding and current row)
-    )
+    from phase
 ),
 
 counts as (
@@ -181,7 +176,8 @@ select
     m.f_h3 and w.stance in ('reduce', 'restore') as f_h3,
     -- Carried through for the dashboard: the "what would change the reading" gauges, and the
     -- three-months-ago rates the season scenario needs
-    m.ff, m.y2, m.y10, m.baa, m.spx, m.sma10, m.spr, m.y2ff, m.ffgap, m.claims3,
+    m.ff, m.y2, m.y10, m.baa, m.spx, m.sma10, m.spxgap, m.spr, m.y2ff, m.ffgap, m.claims3,
+    m.ff12, m.y1012, m.baa12, m.usd12,
     m.sahm, m.sloos, m.lr_ff, m.claims, m.rec,
     m.ff_3m_ago, m.y10_3m_ago,
     m.month >= date '{{ var("regime_display_start") }}' as in_display_window

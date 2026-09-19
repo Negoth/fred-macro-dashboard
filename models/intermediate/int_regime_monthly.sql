@@ -98,8 +98,9 @@ filled as (
     window
         w     as (order by month),
         w_all as (order by month rows between unbounded preceding and current row)
-)
+),
 
+with_trend as (
 select
     f.month,
     f.ff, f.y2, f.y10, f.baa, f.spx, f.claims, f.usd, f.sahm, f.rec, f.sloos, f.lr_ff,
@@ -124,3 +125,20 @@ from filled f
 left join filled p3  on p3.month  = f.month - interval 3 month
 left join filled p6  on p6.month  = f.month - interval 6 month
 left join filled p12 on p12.month = f.month - interval 12 month
+)
+
+select
+    *,
+    -- The trend line behind T4 and H3. Lives here rather than in fct_regime so the indicator
+    -- monitor reads the same number the flag was computed from, instead of recomputing it
+    sma10,
+    case when sma10 is not null and sma10 <> 0
+         then (spx / sma10 - 1) * 100 end as spxgap
+from (
+    select *,
+        -- Requires a full ten months: a partial average would make the first readings
+        -- compare against a shorter, noisier trend
+        case when count(spx) over w10 = 10 then avg(spx) over w10 end as sma10
+    from with_trend
+    window w10 as (order by month rows between 9 preceding and current row)
+)

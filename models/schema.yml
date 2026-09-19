@@ -108,6 +108,49 @@ models:
       - name: yield
         tests: [not_null]
 
+  - name: fct_indicator_monitor
+    description: One row per indicator per month, with its threshold and resulting score or flag
+    columns:
+      - name: month
+        tests: [not_null]
+      - name: indicator
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('regime_indicators')
+                field: key
+      - name: value
+        tests: [not_null]
+      - name: score
+        tests:
+          - accepted_values:
+              arguments:
+                values: [-2, 0, 2]
+              config:
+                # Only the core five carry a score; the added indicators carry a flag
+                where: "score is not null"
+
+  - name: fct_monitor_caps
+    description: Display-only y-axis caps for the spiking indicators. Never affects a signal
+    columns:
+      - name: range_key
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["all", "since2000", "last10y"]
+      - name: cap
+        tests: [not_null]
+
+  - name: fct_stance_episodes
+    description: Every period spent in Cut equities, for the falsification check
+    columns:
+      - name: start_month
+        tests: [not_null, unique]
+      - name: months
+        tests: [not_null]
+
 seeds:
   - name: series_config
     columns:

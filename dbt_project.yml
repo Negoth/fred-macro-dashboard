@@ -25,6 +25,12 @@ vars:
   regime_display_start: "1987-01-01"
   # A window frame bound must be a literal in SQL, so these cannot come from a seed the way
   # the labels do -- they have to be vars, and nothing enforces the match with series.yaml
+  regime_season_window: 6           # months, fixed in advance (see design note 6.4)
+  regime_phase_window: 6
+  # 'mean_7day'      ff is the mean of DFF over all calendar days  (reproduces FEDFUNDS)
+  # 'business_day'   ff is restricted to DGS10's calendar          (reproduces T10YFF exactly)
+  # Only affects the spread and S1, never the season axes. See issue #8
+  regime_spread_source: mean_7day
   regime_season_gate: 0.25          # one policy step
   regime_phase_confirm: 2           # months of agreement before the phase switches
   regime_vulnerability_min: 2

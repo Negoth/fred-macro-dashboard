@@ -629,10 +629,13 @@ table exists to find holes in the rules, not to optimise returns. Publication la
 - They whipsawed in 2022-25, and in 1990, 1998 and 2025 re-entered after stocks had already
   risen 13-21%.
 
-**Requiring T1 for Cut equities was proposed to damp the whipsaw, and measurement rejected it.**
-Both large 2022 episodes survive unchanged, four small ones disappear, and the 2002 second leg
-turns from a −9.5% avoided decline into a +6.9% missed rally. The switch ships as
-`regime.stance.require_t1: false`; the whipsaw stays open and wants a different idea (#9).
+**Two attempts to damp the whipsaw were measured and rejected.** Requiring T1 leaves both large
+2022 episodes untouched and turns the 2002 second leg from a −9.5% avoided decline into a +6.9%
+missed rally. Requiring three breakdown flags does remove all five 2022-25 episodes while still
+catching both busts, but adopting it would be the threshold-fitting rule 1 forbids — and the
+structural argument that might justify it does not survive contact with the data, because the
+busts enter on market-pricing flags while the whipsaws enter on the "real" risk-off flag (6.10).
+The whipsaw stays open and wants a different idea, not a different threshold (#9).
 
 ### 6.8 Screen layout
 
@@ -692,7 +695,109 @@ All ranges and the reasons for non-adoption are recorded in the `verification:` 
 `fct_observations`. The binding constraints on the regime signals are `BAA10Y` (1986-01) and
 `DRTSCILM` (1990-04), so S3 counts as off before 1990-05 and S2 before 2012.
 
-### 6.10 Status of the open questions
+### 6.10 Robustness (carried out 2026-09-19)
+
+Rule 4 of the threshold discipline. Every parameter was perturbed and `fct_regime` rebuilt
+through dbt with overridden vars, so each run exercises the shipped SQL rather than a
+re-implementation (`tmp/scripts/perturb.py`).
+
+The claim being defended is narrow and was fixed in advance: **step aside for the two
+credit-cycle busts, ignore the shock-driven declines**. Churn in transitional months is not a
+failure.
+
+| Scenario | Episodes | Months defensive | Busts caught | Shocks fired |
+| --- | --- | --- | --- | --- |
+| **baseline** | 13 | 92 | 2/2 | none |
+| season window 3mo / 12mo | 13 | 92 | 2/2 | none |
+| season gate 12.5bp / 50bp | 13 | 92 | 2/2 | none |
+| phase window 3mo | 15 | 81 | 2/2 | **2015-16, 2020** |
+| phase window 12mo | 16 | 93 | 2/2 | **2015-16, 2020** |
+| phase confirm 1mo | 15 | 92 | 2/2 | **2020** |
+| phase confirm 3mo | 13 | 88 | 2/2 | none |
+| counts 1 of each | **111** | 160 | 2/2 | **all three** |
+| counts 3 of each | **1** | **312** | 2/2 | **all three** |
+| breakdown_min 3 | 5 | 54 | 2/2 | none |
+| recovery_min 1 | 25 | 64 | 2/2 | none |
+| memory 12mo / 36mo | 12 / 14 | 74 / 94 | 2/2 | none |
+| require_t1 | 9 | 74 | 2/2 | none |
+| spread: business-day | 15 | 103 | 2/2 | none |
+
+**Both busts survive every perturbation tested.** The core claim does not rest on any
+particular parameter value.
+
+Four things the exercise established:
+
+**1. The season drives no flag.** Perturbing the season window or gate relabels up to 29% of
+months and changes the stance in none of them. The season is a *read* of the rate cycle for the
+dashboard, not an input to the portfolio decision. Worth knowing before anyone "fixes" it.
+
+**2. The six-month window is the fragile parameter, and only on the phase side.** Both 3 and 12
+months break the shock-ignoring goal, firing on 2015-16 and 2020. Six sits in a stable middle,
+which is the justification the window was given in advance — long enough to catch a season in
+its first half, short enough not to smear a turn.
+
+**3. Both count extremes are degenerate.** One-of-each gives 111 episodes; three-of-each gives a
+single episode lasting 312 months, because requiring all three recovery flags at once almost
+never happens and the stance never exits. Requiring two is not a tuned value — it is the only
+setting that is neither trigger-happy nor absorbing.
+
+**4. The whipsaw is not separable by flag composition.** `breakdown_min 3` removes all five
+2022-25 episodes and still catches both busts (13 → 5 episodes, 92 → 54 months). It is
+nonetheless **rejected**, because adopting it would be exactly the threshold-fitting rule 1
+forbids, and 6.2's own argument applies — four recessions is too few to fit against. The
+structural justification that might have rescued it does not exist:
+
+| Episode entry | Flags that fired |
+| --- | --- |
+| 2000-09 dot-com bust | T2 + T4 |
+| 2007-11 global financial crisis | T2 + T4 |
+| 2022-05 whipsaw | **T1** + T4 |
+| 2022-12 whipsaw | **T1** + T4 |
+
+The two busts enter on market-pricing flags alone, while two of the whipsaws enter on T1, the
+"real" risk-off phase. The flags that catch the busts are the same ones that cause the
+whipsaws, which is why requiring T1 delays both busts by a month and removes neither whipsaw.
+
+→ **No default changed.** The 2022-25 whipsaw stays open (#9) and wants a different idea, not a
+different threshold.
+
+### 6.11 The monthly aggregation conventions (settled 2026-09-19)
+
+Measured against FRED's public CSVs, 501 months from 1985-01. Detail in issue #8.
+
+**Fed funds uses the monthly mean, and that is right — mostly for the old era.** `DFF` is the
+*effective* rate, not the FOMC target, and before the floor system it blew out at year end
+(6.4). Post-2009 the artifact is essentially gone: median difference 1.5bp, and only 5 of 213
+months differ by 25bp or more. The mean costs nothing there and is necessary before 2008.
+
+**The ten-year leg is where the convention actually bites.** Post-2009 `DFF` barely differs
+between conventions, yet the season label still differs 11.3% of the time — that is `DGS10`,
+which genuinely moves daily. Since the season drives no flag (6.10), this is a presentation
+question, not a signal question.
+
+**The spread arithmetic was checked against FRED's own.** `T10YFF` is exactly `DGS10 − DFF` on
+99.99% of 16,161 days.
+
+| definition | vs `mean(T10YFF)` median / max | S1 disagreement | Episodes |
+| --- | --- | --- | --- |
+| A `mean(T10YFF)` | baseline | — | — |
+| **B** `mean(DGS10) − mean(DFF, 7-day)` ← shipped | 0.005pp / 0.31pp | 3 / 501 | 13, 92mo |
+| C `mean(DGS10) − mean(DFF on DGS10's calendar)` | 0.0000pp / 0.001pp | 0 / 501 | 15, 103mo |
+
+C reproduces FRED's spread exactly and needs no extra series, so it looked like the better
+definition. Rebuilt end to end, it is **not adopted**: every episode from 1990 onward is
+identical, and it adds two spurious episodes in 1986-12 and 1987-11 — the era when the
+year-end `DFF` spikes are extreme and neither definition handles them well. B is also
+self-consistent on its own terms: "average 10-year yield versus average policy rate".
+
+The switch survives as `regime_spread_source` so the comparison can be re-run, defaulting to B.
+
+**One asymmetry is deliberate.** Equities use the month-end close while every rate uses the
+monthly mean, because T4 and H3 compare a month-end close against a 10-month average of
+month-end closes. It does mean the credit phase compares a month-end-based equity change
+against a mean-based spread change. Recorded rather than changed.
+
+### 6.12 Status of the open questions
 
 | Item | Status |
 | --- | --- |
@@ -701,6 +806,8 @@ All ranges and the reasons for non-adoption are recorded in the `verification:` 
 | Season definition | Settled (6.4). Reproduces the reference implementation across all 483 months |
 | Credit phase definition | Settled (6.5) |
 | Flags and stance | Settled (6.6). Falsification table in 6.7 |
+| Robustness of every threshold | Settled (6.10). Both busts survive all 17 perturbations |
+| Monthly aggregation conventions | Settled (6.11). No default changed |
 | Growth x inflation map | **Retired.** `fct_maps` deleted |
 | Pillar z-scores | **Retired.** `fct_pillars`, `fct_monthly`, `int_zscores` deleted |
 
@@ -708,11 +815,10 @@ All ranges and the reasons for non-adoption are recorded in the `verification:` 
 
 | Item | Tracked |
 | --- | --- |
-| Monthly aggregation: mean vs month-end for the 10-year leg; the spread definition | #8 |
-| Robustness: perturbing the windows and thresholds | #9 |
-| The 2022-25 whipsaw — `require_t1` does not fix it | #9 |
+| **The 2022-25 whipsaw.** Neither `require_t1` nor a structural split by flag composition fixes it (6.10) | #9 |
 | Zero lower bound: the season rests on long rates alone in 2009-15 and 2020-21 | #9 |
-| Confirmation lag: March 2020 is confirmed in April | #9 |
+| Confirmation lag: March 2020 is confirmed in April. Probably inherent to the design | #9 |
+| Month-end vs mean for the 10-year leg — presentation only, since the season drives no flag | #8 |
 | What Cut / Rebuild mean in percentages | A portfolio rule, set outside the dashboard |
 | A fallback source for the S&P 500 | yfinance is an unofficial API |
 | The dollar index's new home | Moves to a "what to hold" view |

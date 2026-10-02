@@ -63,6 +63,10 @@ phase_raw as (
 
 phase_confirmed as (
     select *,
+        {%- if confirm <= 1 %}
+        -- No confirmation: every reading takes effect immediately
+        p_raw as confirmed
+        {%- else %}
         case when p_raw is not null and (
             {%- for i in range(1, confirm) %}
             (lag(p_raw, {{ i }} ignore nulls) over (order by month) is null
@@ -70,6 +74,7 @@ phase_confirmed as (
             {%- if not loop.last %} and {%- endif %}
             {%- endfor %}
         ) then p_raw end as confirmed
+        {%- endif %}
     from phase_raw
 ),
 

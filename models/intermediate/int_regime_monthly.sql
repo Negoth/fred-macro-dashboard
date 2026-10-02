@@ -43,6 +43,20 @@ fred as (
     group by 1, 2
 ),
 
+-- DFF prints on all seven days a week while DGS10 prints on business days, so the monthly
+-- mean of the spread is not the difference of the monthly means. Restricting DFF to DGS10's
+-- calendar reproduces FRED's own T10YFF exactly; the 7-day mean reproduces FEDFUNDS. The two
+-- disagree on the inversion flag in 3 months out of 501. Issue #8 weighs them
+ff_business_day as (
+    select date_trunc('month', d.observation_date)::date as month, avg(d.value) as ff_bd
+    from {{ ref('stg_fred_observations') }} d
+    join (select distinct observation_date
+          from {{ ref('stg_fred_observations') }} where series_id = 'DGS10' and value is not null) c
+      on c.observation_date = d.observation_date
+    where d.series_id = 'DFF' and d.value is not null
+    group by 1
+),
+
 spx_m as (
     select date_trunc('month', observation_date)::date as month,
            arg_max(value, observation_date) as spx
@@ -75,17 +89,19 @@ joined as (
         -- The longer-run projection is a level, so the latest print in the month wins
         max(case when f.series_id = 'FEDTARMDLR'   then f.last_value end) as lr_ff_raw,
         max(x.spx)   as spx,
-        max(sl.sloos) as sloos_raw
+        max(sl.sloos) as sloos_raw,
+        max(b.ff_bd)  as ff_bd
     from spine s
     left join fred   f  on f.month  = s.month
     left join spx_m  x  on x.month  = s.month
     left join sloos_m sl on sl.month = s.month
+    left join ff_business_day b on b.month = s.month
     group by 1
 ),
 
 filled as (
     select
-        month, ff, y2, y10, baa, claims, usd, spx,
+        month, ff, y2, y10, baa, claims, usd, spx, ff_bd,
         -- Bounded 2-month carry-forward covers the publication lag without inventing data
         -- indefinitely. The spine is dense, so lag(n) here is exactly n months
         coalesce(sahm_raw, lag(sahm_raw, 1) over w, lag(sahm_raw, 2) over w) as sahm,
@@ -103,15 +119,16 @@ filled as (
 with_trend as (
 select
     f.month,
-    f.ff, f.y2, f.y10, f.baa, f.spx, f.claims, f.usd, f.sahm, f.rec, f.sloos, f.lr_ff,
-    f.y10 - f.ff  as spr,
+    f.ff, f.ff_bd, f.y2, f.y10, f.baa, f.spx, f.claims, f.usd, f.sahm, f.rec, f.sloos, f.lr_ff,
+    -- The spread leg is switchable; the season axes always use the 7-day mean
+    f.y10 - {% if var('regime_spread_source') == 'business_day' %}f.ff_bd{% else %}f.ff{% endif %} as spr,
     f.y2  - f.ff  as y2ff,
     f.ff  - f.lr_ff as ffgap,
     -- Six-month changes: exact calendar lookups on the dense spine
     f.ff  - p6.ff  as d6_ff,
     f.y10 - p6.y10 as d6_10,
-    (f.spx / p6.spx - 1) * 100 as eq6,
-    (f.baa - p6.baa) * 100     as dsp6,
+    (f.spx / pq.spx - 1) * 100 as eq6,
+    (f.baa - pq.baa) * 100     as dsp6,
     f.claims - p3.claims       as claims3,
     -- Twelve-month changes drive the indicator monitor's core five
     f.ff  - p12.ff   as ff12,
@@ -123,7 +140,8 @@ select
     p3.y10 as y10_3m_ago
 from filled f
 left join filled p3  on p3.month  = f.month - interval 3 month
-left join filled p6  on p6.month  = f.month - interval 6 month
+left join filled p6  on p6.month  = f.month - interval {{ var('regime_season_window') }} month
+left join filled pq  on pq.month  = f.month - interval {{ var('regime_phase_window') }} month
 left join filled p12 on p12.month = f.month - interval 12 month
 )
 

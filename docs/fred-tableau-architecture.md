@@ -761,7 +761,7 @@ whipsaws, which is why requiring T1 delays both busts by a month and removes nei
 → **No default changed.** The 2022-25 whipsaw stays open (#9) and wants a different idea, not a
 different threshold.
 
-### 6.11 The monthly aggregation conventions (settled 2026-09-19)
+### 6.11 The monthly aggregation conventions (settled 2026-09-19, extended 2026-10-02)
 
 Measured against FRED's public CSVs, 501 months from 1985-01. Detail in issue #8.
 
@@ -796,6 +796,29 @@ The switch survives as `regime_spread_source` so the comparison can be re-run, d
 monthly mean, because T4 and H3 compare a month-end close against a 10-month average of
 month-end closes. It does mean the credit phase compares a month-end-based equity change
 against a mean-based spread change. Recorded rather than changed.
+
+**Where the panel ends is a convention too, and the rate legs alone decide it (2026-10-02).**
+The spine ran to `date_trunc('month', greatest(latest rate observation, latest S&P 500
+observation))`. Those two sources do not publish in step: Yahoo prints a close the evening of
+the session, while FRED's H.15 daily rates for that same date land the following afternoon. On
+the first day of a month the panel therefore grew a row holding nothing but the S&P 500, and
+every rate-derived flag read "off" rather than "unknown" — `n_s` counts a `NULL` and a `false`
+alike, so the `S2` that had been on through August and September simply vanished from the
+October row, and the newest month — the one the dashboard reads first — tilted toward "the
+warning has cleared". The damage was confined to that row (`s24` is a
+`max`, so a spurious zero does not lower it, and the month is recomputed correctly once FRED
+prints) but the newest row is the most read one on the dashboard.
+
+A month still in progress is kept on purpose — carrying a provisional current month is the
+whole reason `DFF` replaces `FEDFUNDS` (6.4) — so `least` would be the wrong fix: it would drop
+genuine mid-month readings as well. A month with no rate observations at all is not
+provisional, it is empty. The spine now ends at `date_trunc('month', latest rate
+observation)`, which keeps the former and drops the latter.
+
+`assert_regime_month_spine` did not catch this, and could not: it checks that the panel has no
+*gaps*, and an over-long panel is still gapless. The guard against a short panel and the guard
+against a long one are different tests, so `assert_regime_panel_end` is now the second one — it
+fails if the last month on the panel is missing any rate leg.
 
 ### 6.12 Status of the open questions
 

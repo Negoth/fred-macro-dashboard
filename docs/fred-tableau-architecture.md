@@ -378,7 +378,7 @@ Tableau read from there.
 
 **Phase 1 is manual refresh, with the dashboard's change columns limited to 1M/3M/1Y** (even though
 ingestion is daily, the freshness of the display cannot keep up, so showing a "day-over-day" figure
-would be a lie). **Phase 2 adds the Sheets sync, and only then unlocks 1D/1W** (6.7).
+would be a lie). **Phase 2 adds the Sheets sync, and only then unlocks 1D/1W** (6.8).
 
 ---
 
@@ -406,315 +406,259 @@ would be a lie). **Phase 2 adds the Sheets sync, and only then unlocks 1D/1W** (
 
 ## 6. The dashboard's question (settled)
 
+> **Rewritten 2026-09-19.** The dashboard was refurbished around the monetary policy cycle and
+> the credit cycle. The pillar z-scores, the four-seasons quadrant map and the growth x
+> inflation map described in earlier versions of this chapter are **retired**, and the models
+> that produced them (`fct_maps`, `fct_pillars`, `fct_monthly`, `int_monthly_panel`,
+> `int_zscores`, `int_observations_transformed`, `int_observations_ma4`) are deleted. The
+> reasoning that led there is preserved below where it still holds, because the failure modes
+> it records are what the replacement is designed around.
+
 ### 6.1 The central question
 
 > **"Which way should I tilt the centre of gravity of my assets right now, and how far?"**
 
-This is answered by **two independent outputs**. They are not collapsed into a single score.
+The answer is a single **stance**, and every input to it is shown alongside:
 
-| Output                         | What it decides                | Axes                                | The financial-planning decision                      |
-| ------------------------------ | ------------------------------ | ----------------------------------- | ---------------------------------------------------- |
-| **(1) The financial four seasons** (primary) | Where we are in the financial cycle | **Direction of rates x credit cycle** | Cash weighting, contribution pace, choosing products suited to the season |
-| **(2) Growth x inflation** (secondary)       | Which asset class is favoured  | The four quadrants of **growth x inflation** | Equity/bond split, duration, real assets |
+| Stance | What it means |
+| --- | --- |
+| Stay the course | Keep the target allocation |
+| Don't chase | Hold off on adding to positions or opening new ones |
+| Cut equities | Take the equity weight below target |
+| Rebuild equities | Bring the equity weight back to target |
 
-**(1) is a reproduction of an existing framework.** The initial scoring proposal followed Horii's
-*Kinri o Mireba Toshi wa Umaku Iku* (revised edition, Cross Media Publishing), whose framework is as
-follows. The main visual on the front page reproduces it from data, and the structure then **adds
-the axes of (2), which the book does not cover**.
+**The goal is narrow, and stated in advance.** Not every decline is worth trading:
 
-| Chapter                                       | Content                                                            | Corresponding series             |
-| --------------------------------------------- | ------------------------------------------------------------------ | -------------------------------- |
-| Ch. 2 The economy can be forecast from three interest rates | (1) the policy rate (short rates) (2) the 10-year Treasury yield (long rates) (3) corporate bond yields | `FEDFUNDS` / `DGS10` / `BAA10Y` |
-| Ch. 3 The business cycle and interest rates   | "The yield spread is a **leading indicator** of the economy"        | `T10YFF` `T10Y3M`                |
-| Ch. 4 The credit cycle                        | "Corporate spreads tell the story of the credit cycle"              | `BAA10Y` `DRTSCILM`              |
-| Ch. 5 Money goes around the world             | US dollar liquidity = **the World Dollar** (the US monetary base plus the Treasuries held as FX reserves by non-US central banks) | `WORLD_DOLLAR` (derived) |
-| Ch. 9 To succeed at investing                 | "**Measuring the investment climate by interest rates**", "choosing products suited to the season" | <- the source of the initial score |
+| Type of decline | Examples | Drawdown | Time to recover | Visible in macro data |
+| --- | --- | --- | --- | --- |
+| Credit-cycle bust with recession | 2000-02, 2007-09 | −49%, −57% | About 7 and 5.5 years | Yes, with warning signs |
+| Recession without a credit bust | 1990, 2020 | −20%, −34% | Under a year | Partly (2020 was exogenous) |
+| No recession | 1987, 1998, 2011, 2015-16, 2018, 2022, 2025 | −14% to −34% | About 2 years or less | Barely |
 
-**Scope:** the US only, plus `DEXJPUS` (USD/JPY). This gives the minimum FX axis needed for the
-financial-planning decisions of an investor whose living expenses are in yen. International
-comparison (OECD CLI and so on) is not included — it would multiply the number of series and the
-normalisation cost by two or three without sharpening the answer to the question.
+Only the credit-cycle busts do lasting damage, so the dashboard aims to avoid buying near a top
+while the credit cycle is levering, to cut once a breakdown is confirmed, and to rebuild once
+recovery is confirmed — accepting a lag of one to three months after the trough. It
+**deliberately does not try to trade shock-driven corrections with macro data**.
 
-### 6.2 Why split it in two (the failure mode of the initial proposal)
+**Thresholds follow four rules.** Every one is a natural boundary, a policy unit or an official
+estimate, never a value fitted to history. Measurement windows were fixed in advance. History
+is used to falsify (6.6), not to tune. Robustness checks are issue #9.
 
-The initial proposal binarised the year-over-year change of five series (`FEDFUNDS` `DGS10`
-`T10YFF` `BAA10Y` `TWEXBGSMTH`) into `{+1, -1}` and summed them. It breaks down in three ways.
+### 6.2 Why there is no composite score
 
-| #     | Problem                          | Detail                                                                                                             |
-| ----- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| **A** | Information lost to binarisation | A YoY of `+0.02%` and one of `+3.0%` are both `+1`. The score oscillates near the threshold                          |
-| **B** | The level is missing             | YoY alone cannot distinguish "rates are high" from "rates are rising". FF `0.25->0.50%` and `5.00->5.25%` are treated identically |
-| **C** | The sign is context-dependent    | A rise in `DGS10` is a tailwind during a recovery and a headwind when inflation is the worry. On its own its sign is undetermined |
+Two separate scoring proposals were tested and rejected. Both failures shaped the replacement.
 
-**C is the essential one.** Of the initial five, only `BAA10Y` (widening = headwind) has a
-determinate sign on its own; the other four acquire meaning only in combination with others. That is
-why summing them yields no story. "One in five moves the value a lot" is a symptom, not the cause.
+**The initial proposal** binarised the year-over-year change of five series into `{+1, -1}` and
+summed them. It breaks in three ways:
 
--> Before collapsing into a single score, **stand up two axes**. All five of the initial series are
-material for (2) (magnitude); what was missing was material for (1) (direction).
-
-Where the initial five series ended up:
-
-| Initial series | Destination                                                            |
-| -------------- | ---------------------------------------------------------------------- |
-| `FEDFUNDS`     | Carried into pillar 3, but with the transform changed from YoY to `diff12` (12-month difference) (**B**) |
-| `T10YFF`       | Carried into pillar 3 unchanged                                        |
-| `BAA10Y`       | Carried into pillar 4 unchanged                                        |
-| `TWEXBGSMTH`   | **Replaced by `WORLD_DOLLAR`.** What ch. 5 of the book deals with is not the dollar index but the World Dollar: the dollar index is "the **price** of the dollar" and WD is "the **quantity** of dollars" — a different dimension. The initial proposal was using the former as a proxy. `DTWEXBGS` (the price side) also remains, in pillar 5 |
-| `DGS10`        | Carried into pillar 3, but with the transform `chg6m` (6-month change). **Not taken as a level** — it already enters three times as a component of `T10YFF`, `T10Y3M` and `DFII10`, which would be triple counting. On the other hand, **the "direction of rates" axis of (1) can only be built from the change in long rates** (both `T10YFF` and `T10Y3M` are levels of a spread, so the axis does not respond when short and long rates move together). The level and the change are different information |
-
-### 6.3 The main visual: the financial four seasons (direction of rates x credit cycle)
-
-The book's four seasons can be expressed as a **two-axis quadrant model**. Spring -> summer ->
-autumn -> winter traverses the quadrants in order.
-
-```
-                      Credit: easing
-        ┌────────────────────────┬────────────────────────┐
-        │        Spring          │        Summer          │
-        │  Rates falling         │  Rates bottom and turn up │
-        │  Banks lending freely  │  Lending starts to tighten │
-        │  Equities rising       │  Equities peak         │
-Rates ↓ ┼────────────────────────┼────────────────────────┼ Rates ↑
-        │        Winter          │        Autumn          │
-        │  Rates stay high       │  Rates rising          │
-        │  Lending slowly grows  │  Banks reluctant to lend │
-        │  Equities creep up     │  Equities falling  ● <-now │
-        └────────────────────────┴────────────────────────┘
-                    Credit: tightening      ↘ trajectory of the last 24 months
-```
-
-| Element                    | Series                | Transform                                |
-| -------------------------- | --------------------- | ---------------------------------------- |
-| X axis: direction of rates | `DGS10` `FEDFUNDS`    | `chg6m` / `diff12` (the change, not the level) |
-| Y axis: credit cycle       | `BAA10Y` `DRTSCILM`   | z-score of the level                     |
-| Overlaid marker            | `T10YFF` `T10Y3M`     | Mark on the trajectory where the curve inverted |
-
-**Not using the yield spread as an axis is deliberate.** In the book it is the "**leading
-indicator**" of chapter 3 and a different thing from the credit cycle of chapter 4, so it is
-overlaid as "advance notice of a change of season" rather than used as an axis.
-
-> WARNING: **The rules for the quadrant boundaries are provisional.** The decision rules of the
-> book's chapter 9, "measuring the investment climate by interest rates", are not included in any of
-> the published summaries, and confirmation against the original is pending (6.9). In particular,
-> **winter (rates "staying high" = a direction near zero) has the most ambiguous boundary of the
-> four quadrants**. For now they are placeholders based on the sign of the z-score, and the
-> thresholds have been factored out into `seasons.thresholds` in `config/series.yaml` (once the
-> original is known, only that needs replacing; the SQL stays untouched).
-
-**Decisions made during implementation (`models/marts/fct_maps.sql`)**
-
-| Item | Decision | Reason |
+| # | Problem | Detail |
 | --- | --- | --- |
-| Dead zone | Distance `0.25` from the origin | Judging per axis (OR) made a point a boundary merely because one axis was near zero, leaving **51.6%** of the whole history unclassified. Using distance brought that to **6.8%** |
-| Smoothing | A 3-month **trailing** moving average on the axes | Month-to-month reversal noise scattered the history into 47 intervals. Smoothing brings it to 31 intervals, in which the major regimes are legible. It is not centred, in order to avoid look-ahead bias (same reason as 6.5) |
+| **A** | Information lost to binarisation | A YoY of `+0.02%` and one of `+3.0%` are both `+1` |
+| **B** | The level is missing | YoY alone cannot separate "rates are high" from "rates are rising" |
+| **C** | The sign is context-dependent | A rise in `DGS10` is a tailwind in a recovery and a headwind when inflation is the worry |
 
-**Verification results against the real data**
+**C is the essential one.** Of the initial five, only `BAA10Y` has a determinate sign on its own.
 
-| Period | Assignment | Plausibility |
+**The source framework's own score** (Horii, fig. 9-2: five items scored ±2 and summed)
+reproduces the book's March 2022 worked example exactly, then fails out of sample. Checked
+against the S&P 500's 11 peaks and 11 troughs from 1987 to 2025:
+
+- It was clearly negative six months ahead of a peak only in 1998, 2007 and 2020. It read **+6
+  at the January 2022 peak** and +4 at the February 2025 peak.
+- It was negative at all seven troughs since 2007 and still negative six months later at five
+  of them. Six months after the December 2018 trough it read **−10**, in a year the S&P 500
+  rose about 29%.
+
+The item thresholds are mostly natural boundaries and are not the problem. The structure is:
+indicators with different lead times are added together, so an early warning is cancelled by an
+indicator that still looks fine; signs are fixed for indicators whose meaning changes over the
+cycle; year-over-year transforms lag turning points by construction; and four recessions is too
+few to fit thresholds against.
+
+By contrast **the BAA spread peaked within ±3 months of each of the 10 troughs since 1990**. The
+*direction* of spreads carries timing information that a year-over-year transform throws away.
+
+→ So nothing is summed. Two cycles are read independently, and the flags behind the stance are
+counted, never weighted.
+
+### 6.3 Two cycles, not one circle
+
+The retired map put the direction of rates on one axis and the credit cycle on the other, and
+assumed the seasons travel that map in order. Two findings killed it.
+
+**The rate direction was reversed for spring and autumn.** The source defines the seasons by how
+the yield curve changes *shape*, not by whether rates rise or fall:
+
+| Season | Curve move | Rates | Curve |
+| --- | --- | --- | --- |
+| Spring | Bear steepening — long rates rise, hikes feared | Rising | Steepening |
+| Summer | Bear flattening — short rates rise, the Fed hikes | Rising | Flattening |
+| Autumn | Bull flattening — long rates fall, cuts expected; inverts in late autumn | Falling | Flattening |
+| Winter | Bull steepening — short rates fall, the Fed cuts | Falling | Steepening |
+
+**The single-circle assumption fails in the data.** Of 45 season changes on the retired map, 22
+ran clockwise, 22 ran backwards and 1 jumped diagonally. A cycle of about 5 years and one of
+about 10 years do not travel one circle together.
+
+**The credit axis was `BAA10Y` alone.** `DRTSCILM` held 9 observations, so it never cleared the
+z-score minimum and never contributed. The cause was not a data problem: its manifests show it
+was **never fetched with `--full`**, because it was added to the config after the initial
+backfill and the scheduled runs only ever request a trailing 24-month window. CI had no path to
+a full fetch at all; `ingest.yml` now takes a `full` input so a series added later can be
+backfilled without putting the API key on a laptop.
+
+### 6.4 The monetary policy cycle (season)
+
+```
+dFF   = FF(t)  − FF(t−6)          level = (dFF + d10) / 2
+d10   = 10Y(t) − 10Y(t−6)         slope = d10 − dFF
+
+Spring  level >= 0 and slope >= 0     Autumn  level < 0 and slope < 0
+Summer  level >= 0 and slope <  0     Winter  level < 0 and slope >= 0
+
+If max(|dFF|, |d10|) < 0.25, the previous season carries over.
+```
+
+Equivalently: which end of the curve moved more, and which way. Spring is the long end up,
+summer the short end up, autumn the long end down, winter the short end down.
+
+- **25bp is one policy step**, not a fitted value.
+- **Six months** is long enough to catch a season of about 15 months (a cycle of about 5 years)
+  in its first half. Fixed in advance.
+- On the map x = −slope (flattening to the right) and y = level, so the seasons run clockwise
+  from the top left.
+
+**`DFF` replaces `FEDFUNDS`** because the monthly series is published only after month-end and
+so cannot carry a provisional current month.
+
+**Rates are the monthly mean, not the month-end value.** `DFF` is the *effective* fed funds rate
+— the volume-weighted median of actual overnight transactions — not the FOMC target, and before
+the floor system it blew out at year end. On 1986-12-30 it printed **16.17% against a policy
+stance near 6%**, so that month's last value misstates policy by 7.4pp. The mean suppresses that
+and reproduces `FEDFUNDS`. Post-2009 the artifact is essentially gone (median difference 1.5bp,
+5 months out of 213 differing by 25bp or more), so the convention matters mainly for the older
+history. Issue #8 revisits it.
+
+**`T10YFF` is deliberately not ingested.** It is exactly `DGS10 − DFF` on 99.99% of 16,161 days,
+so it carries no information, and the panel needs `DFF` and `DGS10` separately for the two axes
+anyway. Reading it as well would put two slightly different definitions of one quantity in the
+same model — they disagree on the inversion flag in 3 of 501 months.
+
+### 6.5 The credit cycle (phase)
+
+```
+eq6  = S&P500(t) / S&P500(t−6) − 1      dsp6 = BAA(t) − BAA(t−6)
+
+1 Risk-on       eq6 >  0 and dsp6 <  0      3 Risk-off       eq6 <= 0 and dsp6 >= 0
+2 Leverage      eq6 >  0 and dsp6 >= 0      4 Deleveraging   eq6 <= 0 and dsp6 <  0
+
+The phase switches only when the new raw phase appears in two consecutive months.
+```
+
+On the map x = eq6 and y = −dsp6, so the phases run clockwise from the top right. A separate
+cycle of about 10 years, read independently of the season.
+
+**The S&P 500 is the month-end close**, not the monthly mean, because the trend flags compare it
+against a 10-month moving average of month-end closes. It comes from yfinance (`^GSPC`): FRED's
+own `SP500` covers only 10 years, and the panel starts in 1985. yfinance is an unofficial API,
+so a failed fetch stops the CI run rather than updating the signals from partial data; keeping a
+fallback source is still open.
+
+### 6.6 Flags and stance
+
+| Stage | Flag | On when | Why this threshold |
+| --- | --- | --- | --- |
+| Vulnerability | S1 Inverted curve | 10Y − FF < 0 | Natural boundary |
+| | S2 Policy rate above neutral | FF > FOMC longer-run projection | The FOMC's own estimate (from 2012) |
+| | S3 Banks tightening lending | `DRTSCILM` > 0 | More banks tightening than easing |
+| | S4 Leverage phase | Credit phase 2 | Spreads widening while stocks rise |
+| Breakdown | T1 Risk-off phase | Credit phase 3 | Stocks falling and spreads widening together |
+| | T2 Markets pricing cuts | 2Y − FF < 0 | Natural boundary; expectations lead the policy rate |
+| | T3 Labor market weakening | Sahm indicator >= 0.5 | Rule of thumb. Fires 1-3 months after a recession starts, so it confirms rather than warns (false positive 2024-07) |
+| | T4 Stocks break trend | S&P 500 < its 10-month average | Trends tend to persist; noisy alone, so it only counts alongside vulnerability |
+| Recovery | H1 Deleveraging phase | Credit phase 4 | Spread peaks sit within ±3 months of market troughs |
+| | H2 Jobless claims turning down | Claims(t) − Claims(t−3) < 0 | A change of direction |
+| | H3 Stocks regain trend | S&P 500 > its 10-month average | The mirror image of T4 |
+
+Missing inputs count as off. In SQL this is an asymmetry that must not be tidied away: S2 and S3
+stay `NULL` when their input is missing so the count skips them, while every other flag is
+`coalesce(..., false)` — pandas yields `False` where SQL yields `NULL`, and a `NULL` would
+silently drop the row from its count.
+
+```
+S = vulnerability flags on    T = breakdown flags on    H = recovery flags on
+S24 = max(S) over the last 24 months, including this month
+
+Stay the course, Don't chase      Cut equities
+  T >= 2 and S24 >= 2 -> Cut        H >= 2 -> Rebuild
+  else Don't chase if S >= 2      Rebuild equities
+       else Stay the course         T >= 2 and S24 >= 2 -> Cut
+                                    T = 0 -> Don't chase if S >= 2, else Stay the course
+```
+
+- **Requiring two flags** keeps any single indicator from moving the portfolio.
+- **The 24-month memory** exists because vulnerability flags such as inversion fade once a
+  breakdown starts. 24 months is the commonly cited upper bound on the lead from inversion to
+  recession.
+
+Only `Cut equities` and `Rebuild equities` carry state; the other two are recomputed each month.
+
+### 6.7 Falsification check
+
+Every period the stance spent in Cut equities, with the S&P 500's change from entry to exit. The
+table exists to find holes in the rules, not to optimise returns. Publication lags ignored.
+
+| Period | Months | S&P 500 while defensive | Worst drawdown | What was happening | Assessment |
+| --- | --- | --- | --- | --- | --- |
+| 1990-01 → 1990-03 | 2 | +3.3% | 0.0% | — | Roughly neutral |
+| 1990-08 → 1991-05 | 9 | +20.9% | −5.8% | Gulf War recession | Missed a rally |
+| 1991-11 → 1992-02 | 3 | +10.0% | 0.0% | — | Missed a rally |
+| 1998-08 → 1998-10 | 2 | +14.8% | 0.0% | LTCM and Russia | Missed a rally |
+| 1998-11 → 1999-02 | 3 | +6.4% | 0.0% | Same | Missed a rally |
+| 2000-09 → 2002-03 | 18 | −20.1% | −27.5% | Dot-com bust | **Avoided a decline** |
+| 2002-04 → 2003-06 | 14 | −9.5% | −24.3% | Dot-com, second leg | **Avoided a decline** |
+| 2007-11 → 2009-06 | 19 | −37.9% | −50.4% | Global financial crisis | **Avoided a decline** |
+| 2022-05 → 2022-11 | 6 | −1.3% | −13.2% | Inflation and rapid hikes | Roughly neutral |
+| 2022-12 → 2023-09 | 9 | +11.7% | 0.0% | Prolonged inversion | Missed a rally |
+| 2023-10 → 2023-11 | 1 | +8.9% | 0.0% | Same | Missed a rally |
+| 2024-07 → 2024-09 | 2 | +4.3% | 0.0% | Sahm rule triggered | Roughly neutral |
+| 2025-03 → 2025-07 | 4 | +13.0% | −0.8% | Tariff shock | Missed a rally |
+
+- The rules stepped aside for most of both credit-cycle busts — **the claim being defended**.
+- They ignored 2015-16, 2018 and 2020, as intended.
+- They whipsawed in 2022-25, and in 1990, 1998 and 2025 re-entered after stocks had already
+  risen 13-21%.
+
+**Requiring T1 for Cut equities was proposed to damp the whipsaw, and measurement rejected it.**
+Both large 2022 episodes survive unchanged, four small ones disappear, and the 2002 second leg
+turns from a −9.5% avoided decline into a +6.9% missed rally. The switch ships as
+`regime.stance.require_t1: false`; the whipsaw stays open and wants a different idea (#9).
+
+### 6.8 Screen layout
+
+Five tabs, one question each.
+
+| Tab | Question | Reads |
 | --- | --- | --- |
-| 2005-01..2006-11 | Summer (23 months) | Fed hiking cycle with credit still easy = equities peaking. Matches the book's description of summer |
-| 2007-11..2009-06 | Winter (20 months) | The global financial crisis. Cuts x credit contraction |
-| 2016-12..2019-01 | Summer (26 months) | The 2017-2018 hiking cycle |
-| 2020-03..2021-01 | Winter (11 months) | The COVID shock |
-| 2022-07..2023-12 | Autumn (18 months) | Hikes x reluctance to lend. Matches the book's description of autumn |
+| Where we are | Where are we in both cycles, and how should the portfolio move? | `fct_regime` |
+| Monetary policy cycle | Which season, and what would move it to the next? | `fct_regime`, `fct_yield_curve` |
+| Credit cycle | Which phase, and is it heading toward a bust? | `fct_regime` |
+| Indicator monitor | What sits inside the signals? | `fct_indicator_monitor`, `fct_monitor_caps` |
+| Signal logic | How are the signals defined, and where do they fail? | `fct_stance_episodes` + this chapter |
 
-### 6.3b The second visual: the growth x inflation quadrant map
+Everything the tabs need is computed in the marts (principle 4). `fct_regime` carries the
+distance-to-threshold columns the "what would change the reading" gauges use, and the rates from
+three months ago that the season scenario needs, so Tableau does no arithmetic of its own.
 
-An axis pair the book does not cover. Where (1) decides "when, and how far to lean in", this one
-decides **what to hold**.
+**Display-only rule.** Jobless claims and the Sahm indicator spike so far in 2008-09 and 2020
+that normal moves become invisible. `fct_monitor_caps` supplies a cap of median + 6 x MAD of the
+displayed range, floored at the indicator's own threshold line so capping can never hide the
+comparison the chart exists to make. This changes the chart only, never a signal.
 
-```
-                    Inflation ↑
-      ┌────────────────────────┬────────────────────────┐
-      │      Stagflation       │      Overheating       │
-      │  Cash, commodities     │  Commodities, short bonds │
-Growth┼────────────────────────┼────────────────────────┼─> Growth
-  ↓   │      Reflation         │       Recovery         │
-      │  Long bonds (duration) │  Equities (growth      │
-      │  favoured              │  especially)   ● <-now │
-      └────────────────────────┴────────────────────────┘
-                    Inflation ↓
-```
+### 6.9 Verifying that the series exist (carried out 2026-08-18, extended 2026-09-19)
 
-- The axes were chosen as the two factors that best explain return differences between asset classes
-  (in the lineage of the Investment Clock)
-- **The value of placing the two side by side lies in the divergence between them.** The moments
-  when the financial cycle (the fast layer, what the market is pricing) and the real economy (the
-  slow layer) disagree carry the most information
-- Both use the same representation — a point for where we are now and a line for the trajectory of
-  the last 24 months — so **the historical-trend chart originally planned as a separate piece is
-  absorbed into the trajectory**
-
-### 6.4 Pillars and series
-
-**The distinction between coordinates and scores is the crux of the design.**
-
-- **Pillars 1 and 2 (growth, inflation) are "coordinates"** — they carry no good/bad sign. The value
-  itself is a position on an axis
-- **Pillars 3, 4 and 5 (financial conditions, credit, dollar) are "scores"** — `sign` defines
-  "tailwind/headwind for risk assets"
-
-Confusing this distinction re-creates the 6.2-C failure.
-
-`config/series.yaml` is the source of truth for the exact definitions. What follows is a summary.
-
-#### Pillar 1: Growth (coordinate axis X)
-
-| series_id      | Content                          | Freq  | Transform          |
-| -------------- | -------------------------------- | ----- | ------------------ |
-| `PAYEMS`       | Nonfarm payroll employment       | M     | 3-month annualised |
-| `ICSA`         | Initial jobless claims (4-week average) | **W** | YoY (sign inverted) |
-| `INDPRO`       | Industrial production            | M     | YoY                |
-| `PERMIT`       | Building permits / strongly leading | M  | YoY                |
-| `UMCSENT`      | University of Michigan consumer sentiment | M | z-score of level |
-| `AWHMAN`       | Average weekly hours, manufacturing / leads PAYEMS | M | z-score of level |
-| `NEWORDER`     | Core capital goods orders / leads capital expenditure | M | YoY        |
-
-> **`USSLIND` (the Philly Fed leading index) was not adopted because it stopped updating in 2020-02**
-> (6.8). The leading component was replaced by `AWHMAN` and `NEWORDER`. The ISM PMI has been removed
-> from FRED (ISM licensing policy), and the US version of the OECD CLI, `USALOLITONOSTSAM`, also
-> stopped in 2024-01.
-
-#### Pillar 2: Inflation (coordinate axis Y)
-
-| series_id      | Content                          | Freq  | Transform          |
-| -------------- | -------------------------------- | ----- | ------------------ |
-| `CPILFESL`     | Core CPI                         | M     | **3-month annualised** (faster than YoY) |
-| `PCEPILFE`     | Core PCE (the Fed's target)      | M     | YoY                |
-| `T10YIE`       | Expected inflation (10-year breakeven) | **D** | z-score of level |
-| `T5YIFR`       | 5y5y forward expected inflation  | **D** | z-score of level   |
-| `DCOILWTICO`   | WTI crude                        | **D** | YoY                |
-| `AHETPI`       | Average hourly earnings          | M     | YoY                |
-
-#### Pillar 3: Financial conditions and liquidity (score)
-
-| series_id      | Content                          | Freq  | Transform          |
-| -------------- | -------------------------------- | ----- | ------------------ |
-| `NFCI`         | Chicago Fed financial conditions index | W | Level (sign inverted) |
-| `DGS10`        | 10-year Treasury yield / **the rate axis of the four seasons** | D | **`chg6m` (the change)** |
-| `T10Y3M`       | Yield curve (better recession-predictive power than the 2-year version) | D | Level / leading signal |
-| `T10YFF`       | **Inherited from the initial proposal** | D | Level            |
-| `DFII10`       | 10-year **real** rate (TIPS)     | D     | Level (sign inverted) |
-| `FEDFUNDS`     | **Inherited from the initial proposal** | M | 12-month difference (sign inverted) |
-| `NET_LIQUIDITY`| `WALCL − RRPONTSYD − WTREGEN` (derived) | W | 13-week change |
-
-#### Pillar 4: Credit and risk appetite (score)
-
-| series_id      | Content                          | Freq  | Transform          |
-| -------------- | -------------------------------- | ----- | ------------------ |
-| `BAA10Y`       | **Inherited from the initial proposal** | D | Level (sign inverted) |
-| `VIXCLS`       | VIX (available on FRED)          | D     | Level (sign inverted) |
-| `DRTSCILM`     | Bank lending standards (SLOOS)   | Q     | Level (sign inverted) |
-
-> **`BAMLH0A0HYM2` (US high-yield OAS) is not counted in the scores.** It is single-handedly the most
-> informative measure of current credit stress, but licensing restrictions mean the ICE BofA series on
-> FRED **only go back about three years, from 2023-08-21**, covering neither 2008 nor 2020. Taking a
-> z-score over that history would be meaningless, so it was moved to display-only in the change table
-> and the tooltips, in favour of consistency in the time-series scores (`BAMLC0A0CM` is under the same
-> restriction). The long-history credit signal is carried by `BAA10Y` (from 1986).
-
-#### Pillar 5: Dollar and external (score)
-
-| series_id      | Content                          | Freq  | Transform          |
-| -------------- | -------------------------------- | ----- | ------------------ |
-| `DTWEXBGS`     | Trade-weighted dollar (broad, daily) | D | YoY (sign inverted = a stronger dollar is global tightening) |
-| `DEXJPUS`      | USD/JPY / the yen-based investor's perspective | D | YoY |
-| `WORLD_DOLLAR` | `BOGMBASE + WMTSECL1` (derived) / the World Dollar of the book's ch. 5 | W | YoY |
-
-> **`TWEXBGSMTH` has not been discontinued** (it is still updating as of 2026-07). It is the monthly
-> version of the same index as `DTWEXBGS`, and both start in 2006-01. The daily version is taken only
-> because it matches the grain of the other market series, not because the initial proposal's series
-> was outdated.
-
-### 6.5 How the score is constructed
-
-```
-pillar score(t) = mean_i( sign_i x z_i(t) )
-
-z_i(t) = ( x_i(t) − μ_i(t) ) / σ_i(t)     * μ and σ come from an expanding window up to t
-```
-
-Four changes corresponding to A/B/C in 6.2:
-
-1. **Binary -> z-score** (continuous, clipped at `±3`). The oscillation near the threshold disappears -> **A**
-2. **Hold `z_level` and `z_momentum` (the z-score of the 3M/6M difference) in separate columns.**
-   The position on the quadrant is set by the level; the direction of the trajectory by the momentum -> **B**
-3. **State the sign, transform and pillar assignment explicitly in `config/series.yaml`** -> **C**
-4. **Three to seven series per pillar x five pillars = 26 in total.** If one goes wrong, the pillar
-   score moves by at most 1/3 and the overall score by 1/26 -> resolves "one in five moves it a lot"
-
-```yaml
-- id: BAMLH0A0HYM2
-  pillar: credit
-  transform: level
-  sign: -1
-  z_window: expanding      # <- avoids look-ahead bias
-  rationale: "A widening OAS means rising credit risk, a headwind for risk assets"
-```
-
-**`z_window: expanding` is the counterpart to strategies A/B in 3.2.** Standardising with the μ/σ of
-the whole history amounts to "standardising with knowledge of the future" and makes past scores
-hindsight.
-
-|                     | Question                                | Response                    |
-| ------------------- | --------------------------------------- | --------------------------- |
-| Strategy B (ALFRED) | Was it **obtainable** at that point?     | Keep vintages (Phase 2)     |
-| Expanding-window z  | Was it **computable** at that point?     | expanding μ/σ (Phase 1)     |
-
-With both in place you can say outright: "this score is a value that could have been computed in
-real time at the time". This is where the README differentiates most (see chapter 7).
-
-### 6.6 Make the historical chart a stack of pillar contributions, not a line
-
-Drawing the overall score as a single line only tells you "it went down". **An area chart stacking
-the contribution of each pillar** tells you why.
-
-```
-The 2020 deterioration -> the growth pillar falls on its own (COVID)
-The 2022 deterioration -> the financial-conditions pillar is the main cause (rate hikes), growth is still holding up
-```
-
-The NBER recession shading (`USREC`) is already handled by the `is_recession` of 3.6.
-
-### 6.7 Screen layout
-
-```
-┌─ Today's macro environment ────────────────────── as of YYYY-MM-DD ─┐
-│ ┌────────────┐ ┌────────────────────────────────────────────────┐ │
-│ │ Season      │ │  The financial four seasons                     │ │
-│ │ Autumn      │ │  (direction of rates x credit cycle)            │ │
-│ │            │ │  (24-month trajectory; click a point to rewind) │ │
-│ │ Curve       │ │                                                │ │
-│ │ inverted ⚠  │ │  + markers where the yield spread inverted      │ │
-│ └────────────┘ └────────────────────────────────────────────────┘ │
-├────────────────────────────────────────────────────────────────────┤
-│ Growth x inflation quadrant map (second visual, same 24-month trajectory) │
-├────────────────────────────────────────────────────────────────────┤
-│ The five pillars  Growth +0.8 │ Inflation −0.3 │ Financial −1.2 │ Credit +0.4 │ Dollar −0.1 │
-│           A bar per pillar + a 12-month sparkline + the change on the month │
-├────────────────────────────────────────────────────────────────────┤
-│ What moved                                                          │
-│  Indicator │ Latest │ 1M │ 3M │ 1Y │ z │ percentile in history   <- 1D/1W in Phase 2 │
-├────────────────────────────────────────────────────────────────────┤
-│ Historical trend: stacked pillar contributions + NBER recession shading │
-└────────────────────────────────────────────────────────────────────┘
-```
-
-**Tableau features to show off (within what is compatible with "no logic in the BI layer", 4.1)**
-
-| Feature                   | Where it is used                                                |
-| ------------------------- | --------------------------------------------------------------- |
-| **Parameter actions**     | **Click a point on the trajectory -> the whole dashboard rewinds to that moment, a "time machine"**. The centrepiece |
-| LOD (FIXED)               | Historical percentile per series                                 |
-| Viz in tooltip            | A sparkline on each row of the change table                      |
-| Dynamic zone visibility   | Opening and closing the detail panel                             |
-| Sets / highlight actions  | Click a pillar -> filter the change table                        |
-
-### 6.8 Verifying that the series exist (carried out 2026-08-18)
-
-FRED discontinues and replaces series. Every ID in `config/series.yaml` was measured. **No API key is
-needed** — the `fredgraph.csv` endpoint is public.
+FRED discontinues and replaces series. Every ID was measured against the public `fredgraph.csv`
+endpoint, which needs **no API key**.
 
 ```bash
 grep -oE '^\s+- id: [A-Z0-9_]+|inputs: \[[A-Z0-9_, ]+\]' config/series.yaml \
@@ -731,56 +675,47 @@ grep -oE '^\s+- id: [A-Z0-9_]+|inputs: \[[A-Z0-9_, ]+\]' config/series.yaml \
     done
 ```
 
-**Result: all 28 exist. But three of them forced a design change.**
+**Three series forced a design change**, and they are the reason raw is kept append-only even
+for series nothing currently reads: a provider can withdraw history you can no longer refetch.
 
-| Series                | Measured                       | Decision                                                 |
-| --------------------- | ------------------------------ | -------------------------------------------------------- |
-| `USSLIND`             | 1982-01 .. **2020-02**         | Six and a half years without an update = effectively discontinued. Replaced by `AWHMAN` and `NEWORDER` |
-| `BAMLH0A0HYM2`        | **2023-08-21** .. 2026-08-17   | Only about three years, due to the ICE BofA licensing restriction. Dropped from the scores, moved to display-only |
-| `TWEXBGSMTH`          | 2006-01 .. 2026-07 (updating)  | **The initial assumption that it was discontinued was wrong.** Same index and same start as `DTWEXBGS` |
+| Series | Measured | Decision |
+| --- | --- | --- |
+| `USSLIND` | 1982-01 .. **2020-02** | Effectively discontinued. Replaced by `AWHMAN` and `NEWORDER` |
+| `BAMLH0A0HYM2` | **2023-08-21** .. present | ICE BofA licensing restriction. Display only |
+| `ISM_PMI` | — | **Removed from FRED entirely** (ISM licensing) |
 
 All ranges and the reasons for non-adoption are recorded in the `verification:` block of
 `config/series.yaml`.
 
-#### The limit on how far back the panel can go
+**The regime panel starts in 1985** and the display window in 1987. This is not limited by
+`history_start` (2003-01), which applied to the retired z-score panel and now only filters
+`fct_observations`. The binding constraints on the regime signals are `BAA10Y` (1986-01) and
+`DRTSCILM` (1990-04), so S3 counts as off before 1990-05 and S2 before 2012.
 
-Measurement showed that **`history_start: 1990-01-01` is unattainable**. The binding constraints are
-the following.
+### 6.10 Status of the open questions
 
-| Binding series                   | Start      | Affects        |
-| -------------------------------- | ---------- | -------------- |
-| `T10YIE` `T5YIFR` `DFII10` (TIPS/BEI) | 2003-01 | Pillars 2 and 3 |
-| `DTWEXBGS`                       | 2006-01    | Pillar 5       |
-
--> **`history_start` was set to 2003-01-01**, with 2006-01-01 for pillar 5 alone. The NBER recessions
-covered are **the two of 2007-12..2009-06 and 2020-02..2020-04**. The episodes that the contribution
-decomposition of 6.6 can speak to are limited to those two.
-
-This is consistent with `z.min_periods: 60` in 6.5 (five years at monthly frequency, three months at
-daily), but **the limitation that "the z-score population contains only two recessions" is stated
-explicitly in the README**.
-
-### 6.9 Status of the open questions
-
-| Item                        | Status                                                                    |
-| --------------------------- | ------------------------------------------------------------------------- |
-| The dashboard's question    | Settled (6.1)                                                             |
-| Choice of target series     | Settled (`config/series.yaml`) / existence verified. Three replaced (6.8)  |
-| Scope                       | The US only, plus `DEXJPUS`                                               |
-| Strategy A / B              | **Start with A.** The expanding-window z secures "computational point-in-time" in Phase 1. B is kept in reserve as the Phase 2 differentiator (6.5) |
-| Update frequency and automation | **Staged.** Phase 1 is the three ingest tracks plus manual Tableau refresh, with change columns limited to 1M/3M/1Y. Phase 2 adds automatic refresh via Google Sheets and unlocks "day-over-day" (3.7) |
+| Item | Status |
+| --- | --- |
+| The dashboard's question | Settled (6.1) |
+| Composite scores | Rejected twice, with evidence (6.2) |
+| Season definition | Settled (6.4). Reproduces the reference implementation across all 483 months |
+| Credit phase definition | Settled (6.5) |
+| Flags and stance | Settled (6.6). Falsification table in 6.7 |
+| Growth x inflation map | **Retired.** `fct_maps` deleted |
+| Pillar z-scores | **Retired.** `fct_pillars`, `fct_monthly`, `int_zscores` deleted |
 
 **Still open**
 
-| Item                                   | Note                                                             |
-| -------------------------------------- | ---------------------------------------------------------------- |
-| The axis scale of the quadrant maps     | Raw z or historical percentile. The former is vulnerable to outliers, the latter to skew in the distribution |
-| Whether history from 2003 is enough     | The z-score population contains only two recessions (6.8). If it is not enough, one option is to drop TIPS/BEI from pillar 2 and extend pillars 1 and 3 further back, but that introduces asymmetry between the pillars |
-| **The thresholds for the four-seasons quadrants** | **Pending confirmation against ch. 9 of the original book, "measuring the investment climate by interest rates".** The published summaries did not include the decision rules. The boundary of winter (rates "staying high" = a direction near zero) in particular. For now they are placeholders based on the sign of the z-score, and the thresholds have been factored out into `seasons.thresholds` in `config/series.yaml` (once the original is known, only that needs replacing) |
-| The thresholds for the regime labels   | A plain sign, or a dead zone of `abs(z) > 0.5`                    |
-| `.gitignore` excludes `*.csv` / `*.gz` | The `response.json.gz` and `fct_observations.csv` of 3.3 would not be committed. A negation rule is needed |
-
----
+| Item | Tracked |
+| --- | --- |
+| Monthly aggregation: mean vs month-end for the 10-year leg; the spread definition | #8 |
+| Robustness: perturbing the windows and thresholds | #9 |
+| The 2022-25 whipsaw — `require_t1` does not fix it | #9 |
+| Zero lower bound: the season rests on long rates alone in 2009-15 and 2020-21 | #9 |
+| Confirmation lag: March 2020 is confirmed in April | #9 |
+| What Cut / Rebuild mean in percentages | A portfolio rule, set outside the dashboard |
+| A fallback source for the S&P 500 | yfinance is an unofficial API |
+| The dollar index's new home | Moves to a "what to hold" view |
 
 ## 7. Design decisions to write up in the README
 
@@ -793,13 +728,19 @@ are appropriate to the scale**. State the following explicitly.
 - Why no SQL in the BI layer (version control, review and tuning all become impossible)
 - Why ingestion is monthly (it matches the publication schedule of macro indicators)
 - How revisions to economic statistics were handled (which of A/B was adopted, and why)
-- Why two axes rather than a single score (A/B/C in 6.2, especially the context-dependence of the sign)
-- How far the source framework (the book's four seasons) was reproduced, and where the implementation
-  becomes our own (the thresholds are ours; the World Dollar of ch. 5 was rebuilt on the original definition)
-- Why the z-score window is expanding (look-ahead bias, including the point that it is a
-  point-in-time problem distinct from the availability of the data)
+- Why nothing is summed into a score (A/B/C in 6.2, especially the context-dependence of the
+  sign, and the out-of-sample failure of the source framework's own score)
+- Why two cycles rather than one quadrant map (6.3: of 45 season changes on the retired map, 22
+  ran clockwise and 22 ran backwards)
+- How far the source framework was reproduced, and where the implementation becomes our own
+  (the seasons are the book's; the thresholds, the flags and the stance are ours)
+- Why every threshold is a natural boundary, a policy unit or an official estimate, and why the
+  falsification table (6.7) lists the misses rather than hiding them
+- Why the monthly mean is used for rates but the month-end close for equities (6.4: DFF is the
+  effective rate, not the target, and printed 16.17% on 1986-12-30)
 - Why ingestion was split into three tracks (keeping up with the publication schedule; the waste of
   both fetching a daily series monthly and polling a monthly series daily)
+- Why raw is append-only even for series nothing currently reads (6.9: `ISM_PMI` was removed from
+  FRED entirely, and `BAMLH0A0HYM2` lost its history to a licensing change)
 
-The last three cannot be written without understanding the field, and are where the reasoning
-matters more than the implementation.
+The reasoning matters more than the implementation in all of these.

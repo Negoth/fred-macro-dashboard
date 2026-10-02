@@ -16,7 +16,15 @@ WAREHOUSE = ROOT / "data" / "warehouse.duckdb"
 OUT_DIR = ROOT / "data" / "mart"
 
 # The marts handed to Tableau. The regime marts are added as they land
-TABLES = ["dim_series", "fct_observations"]
+TABLES = [
+    "dim_series",
+    "fct_observations",
+    "fct_regime",
+    "fct_yield_curve",
+    "fct_indicator_monitor",
+    "fct_monitor_caps",
+    "fct_stance_episodes",
+]
 
 
 def main(argv: list[str] | None = None) -> int:

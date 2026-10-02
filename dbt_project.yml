@@ -18,6 +18,21 @@ vars:
   # Display filter only -- it never limits what is ingested or computed
   history_start: "2003-01-01"
 
+  # Must be kept in sync with the `regime:` block of config/series.yaml.
+  # The panel starts well before the display window so the six-month changes and the
+  # 10-month moving average are warm by the time anything is shown
+  regime_panel_start: "1985-01-01"
+  regime_display_start: "1987-01-01"
+  # A window frame bound must be a literal in SQL, so these cannot come from a seed the way
+  # the labels do -- they have to be vars, and nothing enforces the match with series.yaml
+  regime_season_gate: 0.25          # one policy step
+  regime_phase_confirm: 2           # months of agreement before the phase switches
+  regime_vulnerability_min: 2
+  regime_breakdown_min: 2
+  regime_recovery_min: 2
+  regime_memory_months: 24
+  regime_require_t1: false          # see issue #9: it does not damp the 2022-25 whipsaw
+
 models:
   tableau_terminal:
     staging:

@@ -43,6 +43,71 @@ models:
       - name: value
         tests: [not_null]
 
+  - name: fct_regime
+    description: Season, credit phase, the eleven flags and the stance. One row per month
+    columns:
+      - name: month
+        tests: [not_null, unique]
+      - name: season
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["spring", "summer", "autumn", "winter"]
+              config:
+                # Null until the first reading clears the 25bp gate
+                where: "season is not null"
+          - relationships:
+              arguments:
+                to: ref('regime_seasons')
+                field: key
+              config:
+                where: "season is not null"
+      - name: phase
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["riskon", "leverage", "riskoff", "repair"]
+              config:
+                where: "phase is not null"
+          - relationships:
+              arguments:
+                to: ref('regime_phases')
+                field: key
+              config:
+                where: "phase is not null"
+      - name: stance
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["normal", "nochase", "reduce", "restore"]
+          - relationships:
+              arguments:
+                to: ref('regime_stances')
+                field: key
+      - name: n_s
+        tests: [not_null]
+      - name: n_t
+        tests: [not_null]
+      - name: n_h
+        tests: [not_null]
+
+  - name: fct_yield_curve
+    description: Yield curve snapshots at now, six months ago and twelve months ago
+    columns:
+      - name: snapshot
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["now", "m6", "m12"]
+      - name: snapshot_date
+        tests: [not_null]
+      - name: tenor_years
+        tests: [not_null]
+      - name: yield
+        tests: [not_null]
+
 seeds:
   - name: series_config
     columns:

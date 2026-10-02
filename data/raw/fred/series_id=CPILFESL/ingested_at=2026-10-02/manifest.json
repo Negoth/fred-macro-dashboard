@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "CPILFESL",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "CPILFESL",
+    "file_type": "json",
+    "observation_start": "2024-10-02"
+  },
+  "retrieved_at": "2026-10-02T11:46:19.415228+00:00",
+  "sha256": "d135edc9d176705c204b26a2f4bad4a0201d9d7f4bf99a87a334d4e17502197a",
+  "n_observations": 23,
+  "observation_start": "1957-01-01",
+  "observation_end": "2026-08-01",
+  "last_updated": "2026-09-11 08:37:53-05",
+  "title": "Consumer Price Index for All Urban Consumers: All Items Less Food and Energy in U.S. City Average",
+  "units": "Index 1982-1984=100",
+  "frequency_short": "M",
+  "seasonal_adjustment_short": "SA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

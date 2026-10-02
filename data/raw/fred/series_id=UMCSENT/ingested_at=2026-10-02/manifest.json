@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "UMCSENT",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "UMCSENT",
+    "file_type": "json",
+    "observation_start": "2024-10-02"
+  },
+  "retrieved_at": "2026-10-02T11:46:31.389928+00:00",
+  "sha256": "635274f082e917da51a8a3b5f39fbdb82b540a87fcd12049e5804c1a4bae0a7e",
+  "n_observations": 23,
+  "observation_start": "1952-11-01",
+  "observation_end": "2026-08-01",
+  "last_updated": "2026-09-25 10:02:24-05",
+  "title": "University of Michigan: Consumer Sentiment",
+  "units": "Index 1966:Q1=100",
+  "frequency_short": "M",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

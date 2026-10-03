@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "DGS30",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "DGS30",
+    "file_type": "json",
+    "observation_start": "2024-10-03"
+  },
+  "retrieved_at": "2026-10-03T01:46:20.818440+00:00",
+  "sha256": "d433d3538064b44c7ea061a7777ba89e1ff760b8293c1ab9b1a1671b4a3c78c9",
+  "n_observations": 521,
+  "observation_start": "1977-02-15",
+  "observation_end": "2026-10-01",
+  "last_updated": "2026-10-02 15:16:39-05",
+  "title": "Market Yield on U.S. Treasury Securities at 30-Year Constant Maturity, Quoted on an Investment Basis",
+  "units": "Percent",
+  "frequency_short": "D",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

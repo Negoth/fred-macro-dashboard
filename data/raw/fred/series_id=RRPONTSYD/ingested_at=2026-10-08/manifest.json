@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "RRPONTSYD",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "RRPONTSYD",
+    "file_type": "json",
+    "observation_start": "2024-10-08"
+  },
+  "retrieved_at": "2026-10-08T19:08:36.273196+00:00",
+  "sha256": "97e1f4195bd9115eb019221836cc63e0e318ba9bfb0f985fc28d69fadb78dfdf",
+  "n_observations": 523,
+  "observation_start": "2003-02-07",
+  "observation_end": "2026-10-08",
+  "last_updated": "2026-10-08 13:02:29-05",
+  "title": "Overnight Reverse Repurchase Agreements: Treasury Securities Sold by the Federal Reserve in the Temporary Open Market Operations",
+  "units": "Billions of US Dollars",
+  "frequency_short": "D",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

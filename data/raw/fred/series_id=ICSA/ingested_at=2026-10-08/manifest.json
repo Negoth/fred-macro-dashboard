@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "ICSA",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "ICSA",
+    "file_type": "json",
+    "observation_start": "2024-10-08"
+  },
+  "retrieved_at": "2026-10-08T19:08:34.063382+00:00",
+  "sha256": "2cb97f38868e383d4cb1febac404f35567d18d1b7462353aa4138bf17bec4b98",
+  "n_observations": 104,
+  "observation_start": "1967-01-07",
+  "observation_end": "2026-10-03",
+  "last_updated": "2026-10-08 07:33:30-05",
+  "title": "Initial Claims",
+  "units": "Number",
+  "frequency_short": "W",
+  "seasonal_adjustment_short": "SA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

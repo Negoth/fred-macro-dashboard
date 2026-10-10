@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "DFII10",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "DFII10",
+    "file_type": "json",
+    "observation_start": "2024-10-10"
+  },
+  "retrieved_at": "2026-10-10T02:09:07.438494+00:00",
+  "sha256": "e72e77936843e7be79076ef63d4c575d06ead92c1095e7df7804d7d1003f33ca",
+  "n_observations": 521,
+  "observation_start": "2003-01-02",
+  "observation_end": "2026-10-08",
+  "last_updated": "2026-10-09 15:16:34-05",
+  "title": "Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity, Quoted on an Investment Basis, Inflation-Indexed",
+  "units": "Percent",
+  "frequency_short": "D",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

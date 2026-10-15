@@ -18,12 +18,22 @@
 -- *native-grain* mixed-frequency table silently means n observations, not n months.
 
 with last_obs as (
-    -- Deterministic end of the panel. current_date would make the build non-reproducible
-    select greatest(
-        (select max(observation_date) from {{ ref('stg_fred_observations') }}
-          where series_id in ('DFF', 'DGS10', 'BAA10Y')),
-        (select max(observation_date) from {{ ref('stg_yf_observations') }})
-    ) as d
+    -- Deterministic end of the panel. current_date would make the build non-reproducible.
+    --
+    -- The rate legs alone decide it. Taking greatest() with the equities leg admitted a month
+    -- whose rate observations were all still unpublished: Yahoo prints a close the evening of
+    -- the session, while FRED's H.15 daily rates for that same date land the following
+    -- afternoon. On the first day of a month the panel therefore grew a row holding nothing
+    -- but the S&P 500, and every rate-derived flag read "off" rather than "unknown" -- n_s
+    -- counts a NULL and a false alike -- so the newest month, the one the dashboard reads
+    -- first, tilted toward "the warning has cleared".
+    --
+    -- A month still in progress is kept on purpose: carrying a provisional current month is
+    -- why DFF replaces FEDFUNDS (design note 6.4). A month with no rates at all is not
+    -- provisional, it is empty.
+    select max(observation_date) as d
+    from {{ ref('stg_fred_observations') }}
+    where series_id in ('DFF', 'DGS10', 'BAA10Y')
 ),
 
 spine as (

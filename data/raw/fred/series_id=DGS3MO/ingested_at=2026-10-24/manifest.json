@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "DGS3MO",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "DGS3MO",
+    "file_type": "json",
+    "observation_start": "2024-10-24"
+  },
+  "retrieved_at": "2026-10-24T01:23:55.587260+00:00",
+  "sha256": "900fcdd95e3cfbf52d511d1f756f6b63ee30c2fc828345d79a425d990a4f89db",
+  "n_observations": 521,
+  "observation_start": "1981-09-01",
+  "observation_end": "2026-10-22",
+  "last_updated": "2026-10-23 15:16:59-05",
+  "title": "Market Yield on U.S. Treasury Securities at 3-Month Constant Maturity, Quoted on an Investment Basis",
+  "units": "Percent",
+  "frequency_short": "D",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

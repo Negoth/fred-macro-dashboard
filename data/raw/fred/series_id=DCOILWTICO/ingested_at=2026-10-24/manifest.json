@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "DCOILWTICO",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "DCOILWTICO",
+    "file_type": "json",
+    "observation_start": "2024-10-24"
+  },
+  "retrieved_at": "2026-10-24T01:23:46.790561+00:00",
+  "sha256": "1d209a77aca52d4b57f796657113df04cf14bd3a9180feeeb9a988605093dd54",
+  "n_observations": 519,
+  "observation_start": "1986-01-02",
+  "observation_end": "2026-10-20",
+  "last_updated": "2026-10-21 12:18:25-05",
+  "title": "Crude Oil Prices: West Texas Intermediate (WTI) - Cushing, Oklahoma",
+  "units": "Dollars per Barrel",
+  "frequency_short": "D",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

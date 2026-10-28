@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "DGS2",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "DGS2",
+    "file_type": "json",
+    "observation_start": "2024-10-28"
+  },
+  "retrieved_at": "2026-10-28T02:02:52.683560+00:00",
+  "sha256": "ec61141e2483bebc2c884746d834d4a6cc7eb8c552bb27e714705fa76a0f462f",
+  "n_observations": 521,
+  "observation_start": "1976-06-01",
+  "observation_end": "2026-10-26",
+  "last_updated": "2026-10-27 15:16:40-05",
+  "title": "Market Yield on U.S. Treasury Securities at 2-Year Constant Maturity, Quoted on an Investment Basis",
+  "units": "Percent",
+  "frequency_short": "D",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

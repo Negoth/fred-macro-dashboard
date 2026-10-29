@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "WTREGEN",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "WTREGEN",
+    "file_type": "json",
+    "observation_start": "2024-10-29"
+  },
+  "retrieved_at": "2026-10-29T18:47:47.652200+00:00",
+  "sha256": "4edd6386e53de83d3f740ed007d1fc8fe4521cde6d20dd4e6190427111b3ea5c",
+  "n_observations": 104,
+  "observation_start": "2002-12-18",
+  "observation_end": "2026-10-21",
+  "last_updated": "2026-10-22 15:31:55-05",
+  "title": "Liabilities and Capital: Liabilities: Deposits with F.R. Banks, Other Than Reserve Balances: U.S. Treasury, General Account: Week Average",
+  "units": "Millions of U.S. Dollars",
+  "frequency_short": "W",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

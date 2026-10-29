@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "WALCL",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "WALCL",
+    "file_type": "json",
+    "observation_start": "2024-10-29"
+  },
+  "retrieved_at": "2026-10-29T18:47:45.722034+00:00",
+  "sha256": "b6469f6d1ee990abfc1b3cc0a3402b391b68f62e608e389cc9d820fd31eabfd7",
+  "n_observations": 104,
+  "observation_start": "2002-12-18",
+  "observation_end": "2026-10-21",
+  "last_updated": "2026-10-22 15:32:30-05",
+  "title": "Assets: Total Assets: Total Assets (Less Eliminations from Consolidation): Wednesday Level",
+  "units": "Millions of U.S. Dollars",
+  "frequency_short": "W",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

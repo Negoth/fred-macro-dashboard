@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "INDPRO",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "INDPRO",
+    "file_type": "json",
+    "observation_start": "2024-11-02"
+  },
+  "retrieved_at": "2026-11-02T14:36:14.825779+00:00",
+  "sha256": "4eb8c11296e3c5855f16c93994e470b7c717198610d033dccfaba4e6174f3bde",
+  "n_observations": 23,
+  "observation_start": "1919-01-01",
+  "observation_end": "2026-09-01",
+  "last_updated": "2026-10-16 08:20:19-05",
+  "title": "Industrial Production: Total Index",
+  "units": "Index 2017=100",
+  "frequency_short": "M",
+  "seasonal_adjustment_short": "SA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

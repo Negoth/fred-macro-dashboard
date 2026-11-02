@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "FEDTARMDLR",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "FEDTARMDLR",
+    "file_type": "json",
+    "observation_start": "2024-11-02"
+  },
+  "retrieved_at": "2026-11-02T14:36:13.871382+00:00",
+  "sha256": "b203cc3d4ecf86acdc7f71a82e74d283731c6ce433210f59720de480f2a87d9f",
+  "n_observations": 8,
+  "observation_start": "2012-01-25",
+  "observation_end": "2026-09-16",
+  "last_updated": "2026-09-16 14:09:29-05",
+  "title": "Longer Run FOMC Summary of Economic Projections for the Fed Funds Rate, Median",
+  "units": "Percent",
+  "frequency_short": "NA",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

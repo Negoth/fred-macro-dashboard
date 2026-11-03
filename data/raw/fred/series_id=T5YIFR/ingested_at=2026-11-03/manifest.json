@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "T5YIFR",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "T5YIFR",
+    "file_type": "json",
+    "observation_start": "2024-11-03"
+  },
+  "retrieved_at": "2026-11-03T03:51:16.387958+00:00",
+  "sha256": "ec0b98e49ef5163ba73573ccd17a3cc07ed27fd26e1d45c2a5bb49b75c8566e4",
+  "n_observations": 521,
+  "observation_start": "2003-01-02",
+  "observation_end": "2026-11-02",
+  "last_updated": "2026-11-02 16:03:35-06",
+  "title": "5-Year, 5-Year Forward Inflation Expectation Rate",
+  "units": "Percent",
+  "frequency_short": "D",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

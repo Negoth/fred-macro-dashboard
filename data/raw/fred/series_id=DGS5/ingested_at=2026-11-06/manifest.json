@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "DGS5",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "DGS5",
+    "file_type": "json",
+    "observation_start": "2024-11-06"
+  },
+  "retrieved_at": "2026-11-06T03:15:00.615097+00:00",
+  "sha256": "c5646e041ad3a034b2b6ae9b61906b59ba8f6a165431c13b4a6d70bed5b9cffe",
+  "n_observations": 521,
+  "observation_start": "1962-01-02",
+  "observation_end": "2026-11-04",
+  "last_updated": "2026-11-05 15:16:34-06",
+  "title": "Market Yield on U.S. Treasury Securities at 5-Year Constant Maturity, Quoted on an Investment Basis",
+  "units": "Percent",
+  "frequency_short": "D",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

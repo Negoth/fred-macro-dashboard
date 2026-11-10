@@ -26,3 +26,4 @@ jobs:
       full: ${{ github.event.inputs.full == 'true' }}
     secrets:
       FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      INGEST_DEPLOY_KEY: ${{ secrets.INGEST_DEPLOY_KEY }}

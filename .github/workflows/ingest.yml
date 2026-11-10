@@ -19,6 +19,10 @@ on:
     secrets:
       FRED_API_KEY:
         required: true
+      # Write deploy key. main requires a PR and GITHUB_TOKEN cannot bypass that on a personal
+      # repo, so the data commit is pushed over SSH with a key the ruleset lets through
+      INGEST_DEPLOY_KEY:
+        required: true
 
 jobs:
   ingest:
@@ -35,6 +39,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.INGEST_DEPLOY_KEY }}
 
       - uses: astral-sh/setup-uv@v5
         with:

@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "BOGMBASE",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "BOGMBASE",
+    "file_type": "json",
+    "observation_start": "2024-11-12"
+  },
+  "retrieved_at": "2026-11-12T20:36:56.900532+00:00",
+  "sha256": "99523b18d4159b5aefb41d91e7fe6ca6bbfaa14343c33654236ef24b20b0c0c6",
+  "n_observations": 23,
+  "observation_start": "1959-01-01",
+  "observation_end": "2026-09-01",
+  "last_updated": "2026-10-27 12:01:28-05",
+  "title": "Monetary Base: Total",
+  "units": "Billions of Dollars",
+  "frequency_short": "M",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

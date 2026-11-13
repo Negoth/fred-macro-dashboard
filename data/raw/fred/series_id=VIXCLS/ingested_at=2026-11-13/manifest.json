@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "VIXCLS",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "VIXCLS",
+    "file_type": "json",
+    "observation_start": "2024-11-13"
+  },
+  "retrieved_at": "2026-11-13T03:18:14.562070+00:00",
+  "sha256": "1657db4802d8136ff882eec6be32e871596457c20a9fd7ffe7044f4cc5f83b0a",
+  "n_observations": 521,
+  "observation_start": "1990-01-02",
+  "observation_end": "2026-11-11",
+  "last_updated": "2026-11-12 08:37:40-06",
+  "title": "CBOE Volatility Index: VIX",
+  "units": "Index",
+  "frequency_short": "D",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

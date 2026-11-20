@@ -1,0 +1,21 @@
+{
+  "source": "yfinance",
+  "series_id": "GSPC",
+  "symbol": "^GSPC",
+  "endpoint": "https://query2.finance.yahoo.com (via yfinance)",
+  "request_params": {
+    "symbol": "^GSPC",
+    "start": "2024-11-20",
+    "interval": "1d",
+    "auto_adjust": false
+  },
+  "retrieved_at": "2026-11-20T03:54:32.385116+00:00",
+  "sha256": "3bcc442562a61755146b4bc08927d99ef2b65685c68a0a0ae460088b23b40e00",
+  "n_observations": 501,
+  "observation_start": "2024-11-20",
+  "observation_end": "2026-11-19",
+  "title": "S&P 500 index (daily close)",
+  "units": "Index",
+  "frequency_short": "D",
+  "license": "Yahoo Finance terms apply. Unofficial API, personal use only"
+}

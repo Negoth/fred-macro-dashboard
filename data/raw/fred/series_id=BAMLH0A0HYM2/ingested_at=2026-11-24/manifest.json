@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "BAMLH0A0HYM2",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "BAMLH0A0HYM2",
+    "file_type": "json",
+    "observation_start": "2024-11-24"
+  },
+  "retrieved_at": "2026-11-24T06:51:12.666503+00:00",
+  "sha256": "34191d6f66e14fe9c313bbf99231776733e42512507df706119dc3331e6705ea",
+  "n_observations": 527,
+  "observation_start": "2023-11-24",
+  "observation_end": "2026-11-20",
+  "last_updated": "2026-11-23 09:02:34-06",
+  "title": "ICE BofA US High Yield Index Option-Adjusted Spread",
+  "units": "Percent",
+  "frequency_short": "D",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

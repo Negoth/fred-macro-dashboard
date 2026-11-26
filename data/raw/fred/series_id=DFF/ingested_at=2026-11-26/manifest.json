@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "DFF",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "DFF",
+    "file_type": "json",
+    "observation_start": "2024-11-26"
+  },
+  "retrieved_at": "2026-11-26T04:46:46.002134+00:00",
+  "sha256": "7230d43e193dbb9de34c4ebffc36705c725c96f3a375c8459554588a3c496756",
+  "n_observations": 729,
+  "observation_start": "1954-07-01",
+  "observation_end": "2026-11-24",
+  "last_updated": "2026-11-25 15:16:36-06",
+  "title": "Federal Funds Effective Rate",
+  "units": "Percent",
+  "frequency_short": "D",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}

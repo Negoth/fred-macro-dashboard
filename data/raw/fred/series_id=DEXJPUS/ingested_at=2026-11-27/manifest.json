@@ -1,0 +1,21 @@
+{
+  "source": "FRED",
+  "series_id": "DEXJPUS",
+  "endpoint": "https://api.stlouisfed.org/fred/series/observations",
+  "request_params": {
+    "series_id": "DEXJPUS",
+    "file_type": "json",
+    "observation_start": "2024-11-27"
+  },
+  "retrieved_at": "2026-11-27T04:52:31.273048+00:00",
+  "sha256": "ee616b4781e3c9c87b0c785ef0434afd301cbdc54c268b2239e98139e1c590f9",
+  "n_observations": 518,
+  "observation_start": "1971-01-04",
+  "observation_end": "2026-11-20",
+  "last_updated": "2026-11-23 15:16:32-06",
+  "title": "Japanese Yen to U.S. Dollar Spot Exchange Rate",
+  "units": "Japanese Yen to One U.S. Dollar",
+  "frequency_short": "D",
+  "seasonal_adjustment_short": "NSA",
+  "license": "https://fred.stlouisfed.org/legal/"
+}
